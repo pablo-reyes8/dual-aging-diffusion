@@ -1,0 +1,52 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Bogota"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      python-runtime:
+        patterns:
+          - "numpy"
+          - "pandas"
+          - "pillow"
+          - "matplotlib"
+          - "PyYAML"
+      diffusion-stack:
+        patterns:
+          - "accelerate"
+          - "diffusers"
+          - "safetensors"
+          - "transformers"
+      test-tooling:
+        patterns:
+          - "pytest"
+          - "pytest-cov"
+          - "ruff"
+    ignore:
+      # PyTorch is intentionally installed from the selected CPU/CUDA wheel index.
+      # Do not let Dependabot rewrite it blindly from PyPI metadata.
+      - dependency-name: "torch"
+      - dependency-name: "torchvision"
+      # FaceNet is intentionally installed with --no-deps when identity loss is used.
+      - dependency-name: "facenet-pytorch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:30"
+      timezone: "America/Bogota"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+

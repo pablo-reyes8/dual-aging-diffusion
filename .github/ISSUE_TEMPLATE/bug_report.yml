@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible failure or regression.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What failed and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction Steps
+      description: Include commands, notebook cells, config paths, and relevant environment details.
+      placeholder: |
+        1. Run ...
+        2. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Error / Traceback
+      render: text
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "OS, Python, PyTorch/CUDA, Colab/local, GPU"
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Mention whether this touches data, training, inference, or dependency installation.
+

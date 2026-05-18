@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a focused project improvement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or workflow gap does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the smallest useful implementation.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - data
+        - diffusion pipeline
+        - loss
+        - training
+        - inference
+        - docs/devops
+        - tests
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Suggested Validation
+      placeholder: "Tests, CLI dry-runs, data audits, or visual checks."
+

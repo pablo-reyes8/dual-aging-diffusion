@@ -1,0 +1,38 @@
+name: DataOps request
+description: Report or propose a dataset, manifest, schema, or governance change.
+title: "[DataOps]: "
+labels: ["data", "dataops"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What data or reproducibility issue should be addressed?
+    validations:
+      required: true
+  - type: input
+    id: dataset_version
+    attributes:
+      label: Dataset Version / Path
+      placeholder: "local_subset_v1, data/configs/dataset_versions.yaml, etc."
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include manifest rows, audit output, broken paths, or schema mismatch details.
+      render: text
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Data Contract
+      description: What should the loader, manifest, or schema guarantee?
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data Safety
+      options:
+        - label: This issue does not include private face images or sensitive raw data.
+          required: true
+        - label: Any attached paths/logs avoid credentials and private storage tokens.
+          required: true
+
