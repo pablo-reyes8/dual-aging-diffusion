@@ -285,8 +285,9 @@ class FaceNetIdentityEncoder(nn.Module):
         except ImportError as e:
             raise ImportError(
                 "facenet-pytorch is required for FaceNetIdentityEncoder.\n"
-                "Install in Colab with:\n"
-                "!pip -q install facenet-pytorch"
+                "Install after PyTorch with:\n"
+                "!pip -q install --no-deps facenet-pytorch\n"
+                "The --no-deps flag avoids reinstalling torch/torchvision."
             ) from e
 
         self.device = torch.device(device)

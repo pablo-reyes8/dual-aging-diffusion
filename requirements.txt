@@ -11,3 +11,10 @@ accelerate>=0.28
 diffusers>=0.27
 safetensors>=0.4
 transformers>=4.40
+
+# Optional when GlobalLossAuxBundle(use_identity=True):
+# Install separately with --no-deps so pip does not reinstall torch/torchvision.
+#   pip install --no-deps facenet-pytorch
+
+# Optional when GlobalLossAuxBundle(use_lpips=True):
+lpips>=0.1.4

@@ -126,6 +126,14 @@ This bundle can load frozen auxiliary models for:
 - identity similarity;
 - optional perceptual distance.
 
+Identity similarity uses `facenet-pytorch`. Install it separately without dependencies after installing the correct PyTorch build:
+
+```bash
+pip install --no-deps facenet-pytorch
+```
+
+This avoids pip downloading or replacing `torch`/`torchvision` in CUDA environments. If identity loss is not needed, set `use_identity: false`.
+
 Default global weights:
 
 ```yaml
@@ -154,4 +162,3 @@ global_p_double_diff: 0.05
 ## Memory Principle
 
 The losses are intentionally sampled rather than all activated on every batch. LoRA and DoRA reduce optimizer memory, but UNet activations still dominate training memory. For that reason, the wrapper alternates loss modes and can offload inactive branches.
-

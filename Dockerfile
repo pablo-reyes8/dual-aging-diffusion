@@ -14,7 +14,8 @@ COPY requirements.txt requirements-dev.txt pyproject.toml README.md ./
 
 RUN pip install --upgrade pip \
     && pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision \
-    && pip install -r requirements-dev.txt
+    && pip install -r requirements-dev.txt \
+    && pip install --no-deps facenet-pytorch
 
 COPY . .
 

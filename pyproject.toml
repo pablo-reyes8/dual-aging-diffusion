@@ -29,6 +29,12 @@ diffusion = [
   "safetensors>=0.4",
   "transformers>=4.40",
 ]
+perceptual = [
+  "lpips>=0.1.4",
+]
+identity = [
+  "facenet-pytorch>=2.5.3",
+]
 dev = [
   "pytest>=8.0",
   "pytest-cov>=5.0",

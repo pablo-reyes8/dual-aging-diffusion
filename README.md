@@ -159,6 +159,14 @@ For GPU training, install the PyTorch build matching your CUDA runtime first, th
 pip install -r requirements.txt
 ```
 
+If `GlobalLossAuxBundle(use_identity=True)` is enabled, install FaceNet separately without dependencies:
+
+```bash
+pip install --no-deps facenet-pytorch
+```
+
+This is intentional. `facenet-pytorch` declares PyTorch dependencies, and installing it normally can make pip try to download or replace `torch`/`torchvision`. The project only needs the FaceNet network code; it should reuse the PyTorch build already installed in the environment.
+
 ## DataOps and Governance
 
 The local branch can be audited from the repository fixtures. The global branch expects external FFHQ-derived ZIP files and metadata CSVs.

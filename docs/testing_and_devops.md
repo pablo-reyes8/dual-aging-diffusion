@@ -78,6 +78,14 @@ Runtime dependencies:
 requirements.txt
 ```
 
+Identity-loss dependency:
+
+```bash
+pip install --no-deps facenet-pytorch
+```
+
+Install FaceNet this way after PyTorch is already installed. A normal `pip install facenet-pytorch` may try to resolve and reinstall PyTorch packages.
+
 Development/test dependencies:
 
 ```text
@@ -95,4 +103,3 @@ pyproject.toml
 Large generated artifacts should not be committed unless they are intentional fixtures. Model checkpoints, training outputs, and generated inference outputs should generally remain outside version control.
 
 The local fixture ZIPs under `data/` are currently part of the project workflow because the local branch can be audited from the repository.
-
