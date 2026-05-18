@@ -29,17 +29,7 @@ from data.local_fused_dataset import (
     local_fused_collate_fn,
     single_person_sampling_collate_fn,
 )
-from data.global_path_datasets import (
-    DRIVE_ZIPS,
-    GLOBAL_CSV_PATH,
-    GLOBAL_IMAGE_DIR,
-    GLOBAL_RESOLUTION,
-    GlobalAgingFaceDataset,
-    build_global_samples_from_attribute_csv,
-    global_debug_collate_fn,
-    global_train_collate_fn,
-    prepare_global_assets,
-)
+import data.global_path_datasets as global_data
 
 
 def build_local_dataloaders(
@@ -230,14 +220,14 @@ def build_global_dataloaders(
     num_workers: int = 2,
     pin_memory: bool = True,
 ) -> Dict[str, Any]:
-    global_image_index = prepare_global_assets(
-        zip_paths=DRIVE_ZIPS,
-        output_dir=GLOBAL_IMAGE_DIR,
+    global_image_index = global_data.prepare_global_assets(
+        zip_paths=global_data.DRIVE_ZIPS,
+        output_dir=global_data.GLOBAL_IMAGE_DIR,
         force_reextract=False,
     )
 
-    global_samples = build_global_samples_from_attribute_csv(
-        csv_path=GLOBAL_CSV_PATH,
+    global_samples = global_data.build_global_samples_from_attribute_csv(
+        csv_path=global_data.GLOBAL_CSV_PATH,
         image_index=global_image_index,
         filename_col="filename",
         age_col="age_pred",
@@ -246,16 +236,16 @@ def build_global_dataloaders(
         require_existing_image=True,
     )
 
-    global_train_dataset = GlobalAgingFaceDataset(
+    global_train_dataset = global_data.GlobalAgingFaceDataset(
         samples=global_samples,
-        resolution=GLOBAL_RESOLUTION,
+        resolution=global_data.GLOBAL_RESOLUTION,
         train=True,
         normalize_for_diffusion=True,
     )
 
-    global_val_dataset = GlobalAgingFaceDataset(
+    global_val_dataset = global_data.GlobalAgingFaceDataset(
         samples=global_samples,
-        resolution=GLOBAL_RESOLUTION,
+        resolution=global_data.GLOBAL_RESOLUTION,
         train=False,
         normalize_for_diffusion=True,
     )
@@ -265,7 +255,7 @@ def build_global_dataloaders(
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
-        collate_fn=global_train_collate_fn,
+        collate_fn=global_data.global_train_collate_fn,
         pin_memory=pin_memory,
     )
 
@@ -274,12 +264,12 @@ def build_global_dataloaders(
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        collate_fn=global_debug_collate_fn,
+        collate_fn=global_data.global_debug_collate_fn,
         pin_memory=pin_memory,
     )
 
     return {
-        "image_dir": GLOBAL_IMAGE_DIR,
+        "image_dir": global_data.GLOBAL_IMAGE_DIR,
         "image_index": global_image_index,
         "samples": global_samples,
         "train_dataset": global_train_dataset,
@@ -316,7 +306,7 @@ def print_local_sanity(objects: Dict[str, Any]) -> None:
 def print_global_sanity(objects: Dict[str, Any]) -> None:
     print("\n[Global paths]")
     print("GLOBAL_IMAGE_DIR:", objects["image_dir"])
-    print("GLOBAL_CSV_PATH:", GLOBAL_CSV_PATH)
+    print("GLOBAL_CSV_PATH:", global_data.GLOBAL_CSV_PATH)
 
     batch = next(iter(objects["val_loader"]))
     print("\n[Global batch check]")

@@ -22,6 +22,8 @@ import matplotlib.pyplot as plt
 # Paths
 # ============================================================
 
+DATA_DIR = Path(__file__).resolve().parent
+
 DRIVE_ZIPS = [
     Path("/content/drive/MyDrive/ffhq_subset_6k_extremes-001.zip"),
     Path("/content/drive/MyDrive/ffhq_subset_6k_extremes-002.zip"),
@@ -29,7 +31,9 @@ DRIVE_ZIPS = [
     Path("/content/drive/MyDrive/ffhq_subset_6k_extremes-004.zip")]
 
 GLOBAL_IMAGE_DIR = Path("/content/ffhq_subset_6k_extremes_local")
-GLOBAL_CSV_PATH = Path("/content/ffhq_face_attribute_prompts.csv")
+REPO_GLOBAL_CSV_PATH = DATA_DIR / "ffhq_predictions" / "ffhq_face_attribute_prompts.csv"
+COLAB_GLOBAL_CSV_PATH = Path("/content/ffhq_face_attribute_prompts.csv")
+GLOBAL_CSV_PATH = REPO_GLOBAL_CSV_PATH if REPO_GLOBAL_CSV_PATH.exists() else COLAB_GLOBAL_CSV_PATH
 
 GLOBAL_RESOLUTION = 512
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
@@ -330,7 +334,16 @@ def build_global_samples_from_attribute_csv(
     require_existing_image: bool = True) -> List[Dict[str, Any]]:
 
     if not csv_path.exists():
-        raise FileNotFoundError(f"CSV not found: {csv_path}")
+        fallback_csv_path = REPO_GLOBAL_CSV_PATH if REPO_GLOBAL_CSV_PATH.exists() else COLAB_GLOBAL_CSV_PATH
+        if fallback_csv_path.exists():
+            print(f"[WARN] CSV not found at {csv_path}. Falling back to: {fallback_csv_path}")
+            csv_path = fallback_csv_path
+        else:
+            raise FileNotFoundError(
+                f"CSV not found: {csv_path}\n"
+                f"Also checked repo CSV: {REPO_GLOBAL_CSV_PATH}\n"
+                f"Also checked Colab CSV: {COLAB_GLOBAL_CSV_PATH}"
+            )
 
     df = pd.read_csv(csv_path).copy()
 
