@@ -8,7 +8,7 @@ Examples:
 """
 
 import argparse
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 from torch.utils.data import DataLoader
 
@@ -23,7 +23,12 @@ from data.local_path_dataset import (
     prepare_local_assets,
     split_samples_by_image_id,
 )
-from data.local_fused_dataset import LocalAlignedFusedDataset, local_fused_collate_fn
+from data.local_fused_dataset import (
+    LocalAlignedFusedDataset,
+    SinglePersonSamplingDataset,
+    local_fused_collate_fn,
+    single_person_sampling_collate_fn,
+)
 from data.global_path_datasets import (
     DRIVE_ZIPS,
     GLOBAL_CSV_PATH,
@@ -180,6 +185,43 @@ def build_local_fused_dataloaders(
         "val_dataset": val_dataset,
         "train_loader": train_loader,
         "val_loader": val_loader,
+    }
+
+
+def build_single_person_sampling_loader(
+    image_stem: str = "09501",
+    target_age: int = 75,
+    local_target_score: Union[float, Dict[str, float]] = 85.0,
+    num_workers: int = 0,
+    pin_memory: bool = False,
+) -> Dict[str, Any]:
+    json_dir, image_dir, image_index = prepare_local_assets()
+    local_samples = build_local_samples(json_dir, image_index)
+
+    dataset = SinglePersonSamplingDataset(
+        samples=local_samples,
+        image_stem=image_stem,
+        target_age=target_age,
+        local_target_score=local_target_score,
+    )
+
+    loader = DataLoader(
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=num_workers,
+        collate_fn=single_person_sampling_collate_fn,
+        pin_memory=pin_memory,
+        drop_last=False,
+    )
+
+    return {
+        "json_dir": json_dir,
+        "image_dir": image_dir,
+        "image_index": image_index,
+        "samples": local_samples,
+        "dataset": dataset,
+        "loader": loader,
     }
 
 

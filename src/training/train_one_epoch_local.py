@@ -503,6 +503,7 @@ def train_one_epoch_local(
     fused_loss_steps = 0
 
     fused_iter = None
+    warned_missing_fused_global = False
     if use_fused_loss:
         if fused_train_loader is None:
             raise ValueError("use_fused_loss=True requires fused_train_loader.")
@@ -770,6 +771,13 @@ def train_one_epoch_local(
                 if fused_global_forward_fn is not None:
                     x_global = fused_global_forward_fn(fused_batch=fused_batch, device=device)
                 else:
+                    if verbose and not warned_missing_fused_global:
+                        print(
+                            "[WARN] use_fused_loss=True but fused_global_forward_fn=None. "
+                            "Using x_global = x_orig fallback. This is okay for smoke tests, "
+                            "but real training should pass a frozen global forward function."
+                        )
+                        warned_missing_fused_global = True
                     x_global = fused_batch["full_pixel_values"]
                 x_global = x_global.detach()
 

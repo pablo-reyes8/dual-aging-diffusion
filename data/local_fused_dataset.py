@@ -23,6 +23,20 @@ GLOBAL_CSV_PATH = Path(__file__).resolve().parent / "ffhq_predictions" / "ffhq_f
 FUSED_FULL_RESOLUTION = 512
 
 
+def make_soft_rect_mask(size: int = 256, feather: int = 24) -> torch.Tensor:
+    mask = torch.ones(1, size, size, dtype=torch.float32)
+
+    feather = int(max(1, min(feather, size // 2)))
+    ramp = torch.linspace(0.0, 1.0, feather, dtype=torch.float32)
+
+    mask[:, :feather, :] *= ramp.view(1, feather, 1)
+    mask[:, -feather:, :] *= ramp.flip(0).view(1, feather, 1)
+    mask[:, :, :feather] *= ramp.view(1, 1, feather)
+    mask[:, :, -feather:] *= ramp.flip(0).view(1, 1, feather)
+
+    return mask.clamp(0.0, 1.0)
+
+
 def load_global_prompt_lookup(csv_path: Path = GLOBAL_CSV_PATH) -> Dict[str, str]:
     if not csv_path.exists():
         return {}
@@ -43,6 +57,25 @@ def load_global_prompt_lookup(csv_path: Path = GLOBAL_CSV_PATH) -> Dict[str, str
             continue
         lookup[filename] = prompt
         lookup[Path(filename).stem] = prompt
+    return lookup
+
+
+def load_global_attribute_phrase_lookup(csv_path: Path = GLOBAL_CSV_PATH) -> Dict[str, str]:
+    if not csv_path.exists():
+        return {}
+
+    df = pd.read_csv(csv_path)
+    if "filename" not in df.columns or "face_attribute_phrase" not in df.columns:
+        return {}
+
+    lookup: Dict[str, str] = {}
+    for row in df.to_dict("records"):
+        filename = str(row.get("filename", "")).strip()
+        phrase = row.get("face_attribute_phrase")
+        if not filename or not isinstance(phrase, str) or not phrase.strip():
+            continue
+        lookup[filename] = phrase.strip()
+        lookup[Path(filename).stem] = phrase.strip()
     return lookup
 
 
@@ -75,6 +108,20 @@ def group_samples_by_image(samples: List[Dict[str, Any]]) -> List[Dict[str, Any]
     return out
 
 
+def select_one_sample_per_region(samples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    by_region: Dict[str, Dict[str, Any]] = {}
+    for sample in samples:
+        region = str(sample["region_key"])
+        if region not in by_region:
+            by_region[region] = sample
+
+    return [
+        by_region[region]
+        for region in REGION_ORDER
+        if region in by_region
+    ]
+
+
 class LocalAlignedFusedDataset(Dataset):
     """
     Person/image-aligned local dataset for the optional fused local loss.
@@ -92,6 +139,7 @@ class LocalAlignedFusedDataset(Dataset):
         context_scale: float = 1.20,
         global_csv_path: Path = GLOBAL_CSV_PATH,
         max_crops_per_image: Optional[int] = None,
+        mask_feather: int = 24,
     ):
         self.groups = group_samples_by_image(samples)
         if len(self.groups) == 0:
@@ -101,6 +149,7 @@ class LocalAlignedFusedDataset(Dataset):
         self.local_resolution = int(local_resolution)
         self.context_scale = float(context_scale)
         self.max_crops_per_image = max_crops_per_image
+        self.mask_feather = int(mask_feather)
         self.global_prompt_lookup = load_global_prompt_lookup(Path(global_csv_path))
 
         self.full_transform = transforms.Compose([
@@ -150,7 +199,7 @@ class LocalAlignedFusedDataset(Dataset):
 
             crop = image.crop((left, top, right, bottom))
             crop_tensors.append(self.crop_transform(crop))
-            masks.append(torch.ones(1, self.local_resolution, self.local_resolution, dtype=torch.float32))
+            masks.append(make_soft_rect_mask(self.local_resolution, feather=self.mask_feather))
             boxes.append(torch.tensor([
                 round(left * scale_x),
                 round(top * scale_y),
@@ -227,3 +276,125 @@ def local_fused_collate_fn(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
         "image_path": [item["image_path"] for item in batch],
         "global_prompt": [item["global_prompt"] for item in batch],
     }
+
+
+class SinglePersonSamplingDataset(Dataset):
+    """
+    One-person monitoring dataset for deterministic reconstruction sampling.
+
+    The returned item is compatible with both parse_sampling_global_batch and
+    parse_sampling_local_batch, so the same loader can be passed as both
+    sampling_loader_global and sampling_loader_local.
+    """
+
+    def __init__(
+        self,
+        samples: List[Dict[str, Any]],
+        image_stem: str = "09501",
+        target_age: int = 75,
+        local_target_score: float | Dict[str, float] = 85.0,
+        full_resolution: int = FUSED_FULL_RESOLUTION,
+        local_resolution: int = LOCAL_RESOLUTION,
+        context_scale: float = 1.20,
+        global_csv_path: Path = GLOBAL_CSV_PATH,
+        mask_feather: int = 24,
+    ):
+        self.image_stem = str(image_stem)
+        self.target_age = int(target_age)
+        self.local_target_score = local_target_score
+        self.full_resolution = int(full_resolution)
+        self.local_resolution = int(local_resolution)
+        self.context_scale = float(context_scale)
+        self.mask_feather = int(mask_feather)
+        self.attribute_lookup = load_global_attribute_phrase_lookup(Path(global_csv_path))
+
+        matching = [s for s in samples if str(s["image_stem"]) == self.image_stem]
+        if not matching:
+            available = sorted({str(s["image_stem"]) for s in samples})[:10]
+            raise ValueError(
+                f"No local samples found for image_stem={self.image_stem}. "
+                f"First available stems: {available}"
+            )
+
+        selected = select_one_sample_per_region(matching)
+        if len(selected) == 0:
+            raise ValueError(f"No valid region samples found for image_stem={self.image_stem}.")
+
+        self.samples = selected
+        self.image_path = Path(selected[0]["image_path"])
+        self.image_id = str(selected[0]["image_id"])
+
+        self.full_transform = transforms.Compose([
+            transforms.Resize((self.full_resolution, self.full_resolution), interpolation=transforms.InterpolationMode.BICUBIC),
+            transforms.ToTensor(),
+        ])
+        self.crop_transform = transforms.Compose([
+            transforms.Resize((self.local_resolution, self.local_resolution), interpolation=transforms.InterpolationMode.BICUBIC),
+            transforms.ToTensor(),
+        ])
+
+    def __len__(self) -> int:
+        return 1
+
+    def _global_prompt(self) -> str:
+        phrase = self.attribute_lookup.get(self.image_stem, "")
+        if phrase:
+            return f"a portrait photo of a {self.target_age}-year-old person, {phrase}"
+        return f"a portrait photo of a {self.target_age}-year-old person"
+
+    def _score_for_region(self, region_key: str) -> float:
+        if isinstance(self.local_target_score, dict):
+            return float(self.local_target_score.get(region_key, self.local_target_score.get("default", 85.0)))
+        return float(self.local_target_score)
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        image = Image.open(self.image_path).convert("RGB")
+        orig_w, orig_h = image.size
+        x_orig = self.full_transform(image)
+        scale_x = self.full_resolution / float(orig_w)
+        scale_y = self.full_resolution / float(orig_h)
+
+        zones = []
+        for sample in self.samples:
+            target_score = self._score_for_region(str(sample["region_key"]))
+            left, top, right, bottom = region_aware_bbox_to_square(
+                bbox=sample["bbox"],
+                region_key=sample["region_key"],
+                image_width=orig_w,
+                image_height=orig_h,
+                context_scale=self.context_scale,
+            )
+            crop = image.crop((left, top, right, bottom))
+            bbox = (
+                int(round(left * scale_x)),
+                int(round(top * scale_y)),
+                int(round(right * scale_x)),
+                int(round(bottom * scale_y)),
+            )
+            zones.append({
+                "zone_name": str(sample["region_key"]),
+                "crop": self.crop_transform(crop),
+                "prompt": make_local_prompt(
+                    region_key=sample["region_key"],
+                    score=target_score,
+                    ethnicity_text=sample.get("ethnicity_raw", None),
+                ),
+                "bbox": bbox,
+                "mask": make_soft_rect_mask(self.local_resolution, feather=self.mask_feather),
+                "target_score": target_score / 100.0,
+            })
+
+        return {
+            "x_orig": x_orig,
+            "image": x_orig,
+            "global_prompt": self._global_prompt(),
+            "image_id": self.image_id,
+            "id": self.image_stem,
+            "zones": zones,
+        }
+
+
+def single_person_sampling_collate_fn(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if len(batch) != 1:
+        raise ValueError("Single-person sampling loader must use batch_size=1.")
+    return batch[0]

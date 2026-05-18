@@ -14,6 +14,7 @@ from data.local_path_dataset import (
     prepare_local_assets,
     split_samples_by_image_id,
 )
+from data.local_fused_dataset import SinglePersonSamplingDataset
 
 
 def _write_image(path: Path, size=(96, 96), color=(128, 96, 64)) -> None:
@@ -123,3 +124,86 @@ def test_local_sample_build_dataset_item_collate_and_sampler(tmp_path):
 
 def test_local_resolution_constant_is_training_compatible():
     assert LOCAL_RESOLUTION == 256
+
+
+def test_single_person_sampling_dataset_returns_global_and_eight_local_zones(tmp_path):
+    image_dir = tmp_path / "images"
+    _write_image(image_dir / "09501.png", size=(128, 128))
+
+    samples = []
+    for idx, region_key in enumerate([
+        "frente",
+        "glabela_entrecejo",
+        "patas_de_gallo",
+        "bajo_ojo_ojeras",
+        "surcos_nasogenianos",
+        "labio_superior",
+        "comisuras_lineas_marioneta",
+        "puente_nasal",
+    ]):
+        samples.append({
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": region_key,
+            "bbox": {"x": 32, "y": 32, "w": 32, "h": 32},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        })
+
+    dataset = SinglePersonSamplingDataset(
+        samples=samples,
+        image_stem="09501",
+        target_age=75,
+        local_target_score=85.0,
+        full_resolution=64,
+        local_resolution=32,
+        global_csv_path=tmp_path / "missing.csv",
+    )
+    item = dataset[0]
+
+    assert item["x_orig"].shape == (3, 64, 64)
+    assert "75-year-old" in item["global_prompt"]
+    assert len(item["zones"]) == 8
+    assert item["zones"][0]["crop"].shape == (3, 32, 32)
+    assert item["zones"][0]["mask"].shape == (1, 32, 32)
+    assert item["zones"][0]["mask"].min().item() == 0.0
+    assert item["zones"][0]["mask"].max().item() == 1.0
+
+
+def test_single_person_sampling_dataset_accepts_region_score_overrides(tmp_path):
+    image_dir = tmp_path / "images"
+    _write_image(image_dir / "09501.png", size=(128, 128))
+    samples = [
+        {
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": "frente",
+            "bbox": {"x": 32, "y": 32, "w": 32, "h": 32},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        },
+        {
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": "surcos_nasogenianos",
+            "bbox": {"x": 32, "y": 32, "w": 32, "h": 32},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        },
+    ]
+
+    dataset = SinglePersonSamplingDataset(
+        samples=samples,
+        image_stem="09501",
+        local_target_score={"frente": 85.0, "surcos_nasogenianos": 100.0},
+        full_resolution=64,
+        local_resolution=32,
+        global_csv_path=tmp_path / "missing.csv",
+    )
+    prompts = {zone["zone_name"]: zone["prompt"] for zone in dataset[0]["zones"]}
+
+    assert "85%" in prompts["frente"]
+    assert "100%" in prompts["surcos_nasogenianos"]
