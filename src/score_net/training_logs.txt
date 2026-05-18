@@ -1,0 +1,1598 @@
+========== START SCORENET TRAINING ==========
+Training mode: epochs
+num_epochs: 25
+print_every steps: 50
+eval_every steps: 1000
+device: cuda
+
+[Checkpointing]
+checkpoint_dir: /content/score_net_checkpoints
+best_overall: /content/score_net_checkpoints/score_net_best_overall.pt
+last: /content/score_net_checkpoints/score_net_last.pt
+train_eval_max_batches: None
+
+[Loss config]
+mae_weight:        0.25
+std_weight:        0.05
+high_tail_weight:  4.0
+high_under_weight: 3.0
+high_threshold:    0.7
+high_power:        2.0
+
+==================================================
+EPOCH 1/25
+==================================================
+
+--------------------------------------------------
+[Step 00001 | Epoch 1/25 | Batch 1/79]
+lr:                    0.00030000
+
+[Train objective]
+avg_total_loss:        0.915811
+avg_weighted_mse:      0.319353
+avg_mae_loss:          0.303536
+avg_std_loss:          0.290791
+avg_high_under_loss:   0.168678
+
+[Train diagnostics]
+last_plain_mse:        0.120213
+last_plain_rmse:       0.346717
+avg_mae:               0.303536
+avg_corr:              -0.1544
+avg_r2:                -0.0621
+last_mae:              0.303536
+last_corr:             -0.1544
+last_r2:               -0.0621
+grad_norm:             5.0282
+
+[Loss internals - current batch]
+mean_weight:           2.4490
+max_weight:            5.0000
+n_high y>=0.7:       21
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4991 / 1.0000 / 0.3364
+pred   min/mean/max/std: 0.3870 / 0.5135 / 0.5887 / 0.0456
+std_ratio pred/target: 0.1356
+high targets y>=0.7 | n=21 | high_mae=0.400166 | high_under_mae=0.400166
+
+[First predictions]
+  y=0.090 | pred=0.578
+  y=0.030 | pred=0.501
+  y=0.000 | pred=0.585
+  y=0.950 | pred=0.476
+  y=0.960 | pred=0.519
+  y=0.410 | pred=0.521
+  y=0.000 | pred=0.537
+  y=1.000 | pred=0.522
+
+================ VALIDATION ================
+[Validation at step 00001]
+val_mse:        0.084494
+val_rmse:       0.290679
+val_mae:        0.256787
+val_corr:       -0.0681
+val_r2:         -0.0217
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.4977 / 0.4977 / 0.4977 / 0.0000
+val_std_ratio pred/target: 0.0000
+val_high_targets y>=0.70 | n=36 | high_mae=0.315107 | high_mse=0.106979 | high_under_mae=0.315107
+
+--------------------------------------------------
+[Step 00050 | Epoch 1/25 | Batch 50/79]
+lr:                    0.00029957
+
+[Train objective]
+avg_total_loss:        0.328702
+avg_weighted_mse:      0.147241
+avg_mae_loss:          0.225283
+avg_std_loss:          0.143644
+avg_high_under_loss:   0.039320
+
+[Train diagnostics]
+last_plain_mse:        0.046753
+last_plain_rmse:       0.216225
+avg_mae:               0.225283
+avg_corr:              0.6345
+avg_r2:                0.2653
+last_mae:              0.150040
+last_corr:             0.7789
+last_r2:               0.5497
+grad_norm:             2.1559
+
+[Loss internals - current batch]
+mean_weight:           2.7696
+max_weight:            5.0000
+n_high y>=0.7:       27
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5819 / 1.0000 / 0.3222
+pred   min/mean/max/std: 0.1709 / 0.6577 / 0.9732 / 0.2639
+std_ratio pred/target: 0.8190
+high targets y>=0.7 | n=27 | high_mae=0.090012 | high_under_mae=0.051062
+
+[First predictions]
+  y=0.700 | pred=0.785
+  y=0.500 | pred=0.477
+  y=0.870 | pred=0.945
+  y=0.780 | pred=0.896
+  y=0.220 | pred=0.456
+  y=0.000 | pred=0.176
+  y=0.620 | pred=0.592
+  y=0.100 | pred=0.191
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 1/25 | step 00079]
+train_eval_mse:        0.050393
+train_eval_rmse:       0.224485
+train_eval_mae:        0.169029
+train_eval_corr:       0.7847
+train_eval_r2:         0.5325
+train_eval_target min/mean/max/std: 0.0000 / 0.5236 / 1.0000 / 0.3283
+train_eval_pred   min/mean/max/std: 0.1051 / 0.6181 / 0.9665 / 0.2637
+train_eval_std_ratio pred/target: 0.8031
+train_eval_high_targets y>=0.70 | n=1809 | high_mae=0.089931 | high_mse=0.014925 | high_under_mae=0.059181
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 1/25 | step 00079]
+val_mse:        0.064142
+val_rmse:       0.253263
+val_mae:        0.199231
+val_corr:       0.5593
+val_r2:         0.2244
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.2096 / 0.6143 / 0.9602 / 0.2032
+val_std_ratio pred/target: 0.7065
+val_high_targets y>=0.70 | n=36 | high_mae=0.157965 | high_mse=0.045065 | high_under_mae=0.129995
+
+[Checkpoint selection scores]
+overall_score: 0.662751
+train_score:   0.830533
+val_score:     0.351157
+best_so_far:   -inf
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[Saved BEST overall] /content/score_net_checkpoints/score_net_best_overall.pt
+
+==================================================
+EPOCH 2/25
+==================================================
+
+--------------------------------------------------
+[Step 00100 | Epoch 2/25 | Batch 21/79]
+lr:                    0.00029830
+
+[Train objective]
+avg_total_loss:        0.183671
+avg_weighted_mse:      0.097855
+avg_mae_loss:          0.183426
+avg_std_loss:          0.058143
+avg_high_under_loss:   0.012351
+
+[Train diagnostics]
+last_plain_mse:        0.055326
+last_plain_rmse:       0.235215
+avg_mae:               0.183426
+avg_corr:              0.7572
+avg_r2:                0.4293
+last_mae:              0.175471
+last_corr:             0.8099
+last_r2:               0.5635
+grad_norm:             2.5656
+
+[Loss internals - current batch]
+mean_weight:           2.5226
+max_weight:            5.0000
+n_high y>=0.7:       24
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5039 / 1.0000 / 0.3560
+pred   min/mean/max/std: 0.0895 / 0.6122 / 0.9783 / 0.2876
+std_ratio pred/target: 0.8078
+high targets y>=0.7 | n=24 | high_mae=0.112365 | high_under_mae=0.075220
+
+[First predictions]
+  y=0.280 | pred=0.579
+  y=1.000 | pred=0.945
+  y=0.700 | pred=0.916
+  y=0.000 | pred=0.097
+  y=0.980 | pred=0.933
+  y=0.110 | pred=0.653
+  y=0.100 | pred=0.197
+  y=0.140 | pred=0.158
+
+--------------------------------------------------
+[Step 00150 | Epoch 2/25 | Batch 71/79]
+lr:                    0.00029618
+
+[Train objective]
+avg_total_loss:        0.142035
+avg_weighted_mse:      0.073022
+avg_mae_loss:          0.151991
+avg_std_loss:          0.037665
+avg_high_under_loss:   0.009711
+
+[Train diagnostics]
+last_plain_mse:        0.048100
+last_plain_rmse:       0.219318
+avg_mae:               0.151991
+avg_corr:              0.8210
+avg_r2:                0.5980
+last_mae:              0.161840
+last_corr:             0.8073
+last_r2:               0.5586
+grad_norm:             2.3512
+
+[Loss internals - current batch]
+mean_weight:           2.5390
+max_weight:            5.0000
+n_high y>=0.7:       24
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5252 / 1.0000 / 0.3301
+pred   min/mean/max/std: 0.0522 / 0.6220 / 0.9697 / 0.2943
+std_ratio pred/target: 0.8917
+high targets y>=0.7 | n=24 | high_mae=0.076426 | high_under_mae=0.050021
+
+[First predictions]
+  y=0.880 | pred=0.922
+  y=0.920 | pred=0.966
+  y=0.840 | pred=0.723
+  y=0.600 | pred=0.634
+  y=0.280 | pred=0.808
+  y=0.620 | pred=0.885
+  y=0.380 | pred=0.090
+  y=0.550 | pred=0.523
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 2/25 | step 00158]
+train_eval_mse:        0.037407
+train_eval_rmse:       0.193409
+train_eval_mae:        0.138454
+train_eval_corr:       0.8485
+train_eval_r2:         0.6633
+train_eval_target min/mean/max/std: 0.0000 / 0.5230 / 1.0000 / 0.3333
+train_eval_pred   min/mean/max/std: 0.0498 / 0.5895 / 0.9749 / 0.3262
+train_eval_std_ratio pred/target: 0.9786
+train_eval_high_targets y>=0.70 | n=1848 | high_mae=0.076588 | high_mse=0.013259 | high_under_mae=0.035758
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 2/25 | step 00158]
+val_mse:        0.056970
+val_rmse:       0.238685
+val_mae:        0.190175
+val_corr:       0.6656
+val_r2:         0.3111
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.1137 / 0.6239 / 0.9621 / 0.2537
+val_std_ratio pred/target: 0.8821
+val_high_targets y>=0.70 | n=36 | high_mae=0.130170 | high_mse=0.035548 | high_under_mae=0.082628
+
+[Checkpoint selection scores]
+overall_score: 0.884204
+train_score:   1.044172
+val_score:     0.587121
+best_so_far:   0.662751
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[Saved BEST overall] /content/score_net_checkpoints/score_net_best_overall.pt
+
+==================================================
+EPOCH 3/25
+==================================================
+
+--------------------------------------------------
+[Step 00200 | Epoch 3/25 | Batch 42/79]
+lr:                    0.00029323
+
+[Train objective]
+avg_total_loss:        0.135963
+avg_weighted_mse:      0.070413
+avg_mae_loss:          0.147813
+avg_std_loss:          0.027030
+avg_high_under_loss:   0.009082
+
+[Train diagnostics]
+last_plain_mse:        0.028468
+last_plain_rmse:       0.168725
+avg_mae:               0.147813
+avg_corr:              0.8325
+avg_r2:                0.6186
+last_mae:              0.122970
+last_corr:             0.8904
+last_r2:               0.7539
+grad_norm:             0.9531
+
+[Loss internals - current batch]
+mean_weight:           2.5652
+max_weight:            5.0000
+n_high y>=0.7:       23
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5250 / 1.0000 / 0.3401
+pred   min/mean/max/std: 0.0292 / 0.5917 / 0.9734 / 0.2956
+std_ratio pred/target: 0.8691
+high targets y>=0.7 | n=23 | high_mae=0.071168 | high_under_mae=0.039304
+
+[First predictions]
+  y=0.370 | pred=0.457
+  y=0.300 | pred=0.325
+  y=0.170 | pred=0.269
+  y=1.000 | pred=0.945
+  y=0.000 | pred=0.190
+  y=0.990 | pred=0.944
+  y=0.310 | pred=0.114
+  y=0.910 | pred=0.875
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 3/25 | step 00237]
+train_eval_mse:        0.033459
+train_eval_rmse:       0.182918
+train_eval_mae:        0.132729
+train_eval_corr:       0.8753
+train_eval_r2:         0.6975
+train_eval_target min/mean/max/std: 0.0000 / 0.5286 / 1.0000 / 0.3326
+train_eval_pred   min/mean/max/std: 0.0386 / 0.6109 / 0.9783 / 0.3197
+train_eval_std_ratio pred/target: 0.9611
+train_eval_high_targets y>=0.70 | n=1843 | high_mae=0.066097 | high_mse=0.008614 | high_under_mae=0.023361
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 3/25 | step 00237]
+val_mse:        0.075201
+val_rmse:       0.274228
+val_mae:        0.211011
+val_corr:       0.5411
+val_r2:         0.0907
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.1149 / 0.6533 / 0.9679 / 0.2179
+val_std_ratio pred/target: 0.7577
+val_high_targets y>=0.70 | n=36 | high_mae=0.117521 | high_mse=0.025131 | high_under_mae=0.075203
+
+[Checkpoint selection scores]
+overall_score: 0.822137
+train_score:   1.097268
+val_score:     0.311180
+best_so_far:   0.884204
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 4/25
+==================================================
+
+--------------------------------------------------
+[Step 00250 | Epoch 4/25 | Batch 13/79]
+lr:                    0.00028947
+
+[Train objective]
+avg_total_loss:        0.118296
+avg_weighted_mse:      0.059209
+avg_mae_loss:          0.131709
+avg_std_loss:          0.023054
+avg_high_under_loss:   0.008336
+
+[Train diagnostics]
+last_plain_mse:        0.030819
+last_plain_rmse:       0.175552
+avg_mae:               0.131709
+avg_corr:              0.8654
+avg_r2:                0.6984
+last_mae:              0.123744
+last_corr:             0.8733
+last_r2:               0.7119
+grad_norm:             1.5641
+
+[Loss internals - current batch]
+mean_weight:           2.4671
+max_weight:            5.0000
+n_high y>=0.7:       23
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5097 / 1.0000 / 0.3271
+pred   min/mean/max/std: 0.0415 / 0.5812 / 0.9725 / 0.3037
+std_ratio pred/target: 0.9285
+high targets y>=0.7 | n=23 | high_mae=0.084719 | high_under_mae=0.050901
+
+[First predictions]
+  y=0.000 | pred=0.534
+  y=0.420 | pred=0.499
+  y=0.000 | pred=0.219
+  y=0.150 | pred=0.586
+  y=0.840 | pred=0.761
+  y=0.910 | pred=0.954
+  y=0.270 | pred=0.394
+  y=0.520 | pred=0.648
+
+--------------------------------------------------
+[Step 00300 | Epoch 4/25 | Batch 63/79]
+lr:                    0.00028492
+
+[Train objective]
+avg_total_loss:        0.106652
+avg_weighted_mse:      0.054912
+avg_mae_loss:          0.129470
+avg_std_loss:          0.024615
+avg_high_under_loss:   0.006048
+
+[Train diagnostics]
+last_plain_mse:        0.033283
+last_plain_rmse:       0.182435
+avg_mae:               0.129470
+avg_corr:              0.8691
+avg_r2:                0.7004
+last_mae:              0.127076
+last_corr:             0.8686
+last_r2:               0.7233
+grad_norm:             0.9660
+
+[Loss internals - current batch]
+mean_weight:           2.5433
+max_weight:            5.0000
+n_high y>=0.7:       24
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5153 / 1.0000 / 0.3468
+pred   min/mean/max/std: 0.0459 / 0.5765 / 0.9770 / 0.3030
+std_ratio pred/target: 0.8736
+high targets y>=0.7 | n=24 | high_mae=0.071658 | high_under_mae=0.054423
+
+[First predictions]
+  y=0.570 | pred=0.388
+  y=0.850 | pred=0.955
+  y=0.600 | pred=0.561
+  y=0.660 | pred=0.648
+  y=0.450 | pred=0.514
+  y=0.990 | pred=0.959
+  y=0.670 | pred=0.903
+  y=0.120 | pred=0.216
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 4/25 | step 00316]
+train_eval_mse:        0.031200
+train_eval_rmse:       0.176634
+train_eval_mae:        0.126459
+train_eval_corr:       0.8791
+train_eval_r2:         0.7180
+train_eval_target min/mean/max/std: 0.0000 / 0.5191 / 1.0000 / 0.3326
+train_eval_pred   min/mean/max/std: 0.0313 / 0.5847 / 0.9792 / 0.3345
+train_eval_std_ratio pred/target: 1.0057
+train_eval_high_targets y>=0.70 | n=1791 | high_mae=0.067445 | high_mse=0.008768 | high_under_mae=0.023066
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 4/25 | step 00316]
+val_mse:        0.065579
+val_rmse:       0.256083
+val_mae:        0.197733
+val_corr:       0.6387
+val_r2:         0.2071
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.2143 / 0.6624 / 0.9689 / 0.2242
+val_std_ratio pred/target: 0.7797
+val_high_targets y>=0.70 | n=36 | high_mae=0.113998 | high_mse=0.023856 | high_under_mae=0.067305
+
+[Checkpoint selection scores]
+overall_score: 0.901902
+train_score:   1.124563
+val_score:     0.488388
+best_so_far:   0.884204
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[Saved BEST overall] /content/score_net_checkpoints/score_net_best_overall.pt
+
+==================================================
+EPOCH 5/25
+==================================================
+
+--------------------------------------------------
+[Step 00350 | Epoch 5/25 | Batch 34/79]
+lr:                    0.00027961
+
+[Train objective]
+avg_total_loss:        0.095707
+avg_weighted_mse:      0.050161
+avg_mae_loss:          0.122907
+avg_std_loss:          0.016422
+avg_high_under_loss:   0.004666
+
+[Train diagnostics]
+last_plain_mse:        0.038135
+last_plain_rmse:       0.195281
+avg_mae:               0.122907
+avg_corr:              0.8816
+avg_r2:                0.7344
+last_mae:              0.140869
+last_corr:             0.8261
+last_r2:               0.5952
+grad_norm:             0.9914
+
+[Loss internals - current batch]
+mean_weight:           2.2728
+max_weight:            5.0000
+n_high y>=0.7:       17
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4733 / 1.0000 / 0.3069
+pred   min/mean/max/std: 0.0464 / 0.5526 / 0.9781 / 0.2974
+std_ratio pred/target: 0.9688
+high targets y>=0.7 | n=17 | high_mae=0.061738 | high_under_mae=0.020834
+
+[First predictions]
+  y=0.310 | pred=0.225
+  y=0.310 | pred=0.207
+  y=0.860 | pred=0.854
+  y=0.580 | pred=0.636
+  y=0.320 | pred=0.726
+  y=0.610 | pred=0.743
+  y=0.570 | pred=0.574
+  y=0.000 | pred=0.248
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 5/25 | step 00395]
+train_eval_mse:        0.022315
+train_eval_rmse:       0.149382
+train_eval_mae:        0.109266
+train_eval_corr:       0.9031
+train_eval_r2:         0.7972
+train_eval_target min/mean/max/std: 0.0000 / 0.5234 / 1.0000 / 0.3317
+train_eval_pred   min/mean/max/std: 0.0292 / 0.5621 / 0.9830 / 0.3226
+train_eval_std_ratio pred/target: 0.9724
+train_eval_high_targets y>=0.70 | n=1842 | high_mae=0.071025 | high_mse=0.009752 | high_under_mae=0.036687
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 5/25 | step 00395]
+val_mse:        0.062989
+val_rmse:       0.250976
+val_mae:        0.201897
+val_corr:       0.5272
+val_r2:         0.2384
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.1109 / 0.5680 / 0.9599 / 0.2015
+val_std_ratio pred/target: 0.7006
+val_high_targets y>=0.70 | n=36 | high_mae=0.168107 | high_mse=0.044664 | high_under_mae=0.160548
+
+[Checkpoint selection scores]
+overall_score: 0.875367
+train_score:   1.185339
+val_score:     0.299706
+best_so_far:   0.901902
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 6/25
+==================================================
+
+--------------------------------------------------
+[Step 00400 | Epoch 6/25 | Batch 5/79]
+lr:                    0.00027358
+
+[Train objective]
+avg_total_loss:        0.094569
+avg_weighted_mse:      0.047997
+avg_mae_loss:          0.117047
+avg_std_loss:          0.016318
+avg_high_under_loss:   0.005498
+
+[Train diagnostics]
+last_plain_mse:        0.017472
+last_plain_rmse:       0.132183
+avg_mae:               0.117047
+avg_corr:              0.8950
+avg_r2:                0.7589
+last_mae:              0.088960
+last_corr:             0.9239
+last_r2:               0.8486
+grad_norm:             0.8514
+
+[Loss internals - current batch]
+mean_weight:           2.8276
+max_weight:            5.0000
+n_high y>=0.7:       30
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5844 / 1.0000 / 0.3397
+pred   min/mean/max/std: 0.0253 / 0.5970 / 0.9805 / 0.3344
+std_ratio pred/target: 0.9843
+high targets y>=0.7 | n=30 | high_mae=0.069166 | high_under_mae=0.039211
+
+[First predictions]
+  y=0.930 | pred=0.932
+  y=0.420 | pred=0.235
+  y=0.350 | pred=0.282
+  y=0.100 | pred=0.120
+  y=1.000 | pred=0.951
+  y=0.110 | pred=0.051
+  y=0.990 | pred=0.763
+  y=1.000 | pred=0.980
+
+--------------------------------------------------
+[Step 00450 | Epoch 6/25 | Batch 55/79]
+lr:                    0.00026687
+
+[Train objective]
+avg_total_loss:        0.088661
+avg_weighted_mse:      0.045293
+avg_mae_loss:          0.115735
+avg_std_loss:          0.014802
+avg_high_under_loss:   0.004565
+
+[Train diagnostics]
+last_plain_mse:        0.013622
+last_plain_rmse:       0.116712
+avg_mae:               0.115735
+avg_corr:              0.8979
+avg_r2:                0.7698
+last_mae:              0.084796
+last_corr:             0.9312
+last_r2:               0.8594
+grad_norm:             2.8456
+
+[Loss internals - current batch]
+mean_weight:           2.8487
+max_weight:            5.0000
+n_high y>=0.7:       28
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.6044 / 1.0000 / 0.3113
+pred   min/mean/max/std: 0.0187 / 0.6059 / 0.9863 / 0.3172
+std_ratio pred/target: 1.0190
+high targets y>=0.7 | n=28 | high_mae=0.062010 | high_under_mae=0.037184
+
+[First predictions]
+  y=0.400 | pred=0.703
+  y=0.320 | pred=0.099
+  y=1.000 | pred=0.986
+  y=0.850 | pred=0.889
+  y=0.590 | pred=0.582
+  y=0.910 | pred=0.957
+  y=0.000 | pred=0.043
+  y=0.040 | pred=0.027
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 6/25 | step 00474]
+train_eval_mse:        0.021404
+train_eval_rmse:       0.146300
+train_eval_mae:        0.106888
+train_eval_corr:       0.9108
+train_eval_r2:         0.8037
+train_eval_target min/mean/max/std: 0.0000 / 0.5193 / 1.0000 / 0.3302
+train_eval_pred   min/mean/max/std: 0.0217 / 0.5533 / 0.9828 / 0.3417
+train_eval_std_ratio pred/target: 1.0348
+train_eval_high_targets y>=0.70 | n=1774 | high_mae=0.063173 | high_mse=0.007248 | high_under_mae=0.024192
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 6/25 | step 00474]
+val_mse:        0.073952
+val_rmse:       0.271941
+val_mae:        0.209103
+val_corr:       0.4473
+val_r2:         0.1058
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0638 / 0.6034 / 0.9539 / 0.1901
+val_std_ratio pred/target: 0.6611
+val_high_targets y>=0.70 | n=36 | high_mae=0.142505 | high_mse=0.036041 | high_under_mae=0.131805
+
+[Checkpoint selection scores]
+overall_score: 0.839610
+train_score:   1.205665
+val_score:     0.159795
+best_so_far:   0.901902
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 7/25
+==================================================
+
+--------------------------------------------------
+[Step 00500 | Epoch 7/25 | Batch 26/79]
+lr:                    0.00025951
+
+[Train objective]
+avg_total_loss:        0.084263
+avg_weighted_mse:      0.041507
+avg_mae_loss:          0.109366
+avg_std_loss:          0.013874
+avg_high_under_loss:   0.004907
+
+[Train diagnostics]
+last_plain_mse:        0.015749
+last_plain_rmse:       0.125493
+avg_mae:               0.109366
+avg_corr:              0.9087
+avg_r2:                0.7909
+last_mae:              0.091071
+last_corr:             0.9177
+last_r2:               0.8323
+grad_norm:             1.1734
+
+[Loss internals - current batch]
+mean_weight:           2.8306
+max_weight:            5.0000
+n_high y>=0.7:       31
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.6031 / 1.0000 / 0.3064
+pred   min/mean/max/std: 0.0322 / 0.6089 / 0.9839 / 0.3112
+std_ratio pred/target: 1.0155
+high targets y>=0.7 | n=31 | high_mae=0.080807 | high_under_mae=0.036454
+
+[First predictions]
+  y=0.000 | pred=0.039
+  y=0.330 | pred=0.263
+  y=0.930 | pred=0.984
+  y=0.550 | pred=0.439
+  y=0.510 | pred=0.510
+  y=0.730 | pred=0.677
+  y=1.000 | pred=0.913
+  y=0.520 | pred=0.545
+
+--------------------------------------------------
+[Step 00550 | Epoch 7/25 | Batch 76/79]
+lr:                    0.00025155
+
+[Train objective]
+avg_total_loss:        0.080887
+avg_weighted_mse:      0.039816
+avg_mae_loss:          0.107461
+avg_std_loss:          0.013048
+avg_high_under_loss:   0.004518
+
+[Train diagnostics]
+last_plain_mse:        0.027149
+last_plain_rmse:       0.164771
+avg_mae:               0.107461
+avg_corr:              0.9096
+avg_r2:                0.7981
+last_mae:              0.128367
+last_corr:             0.9137
+last_r2:               0.7418
+grad_norm:             2.2305
+
+[Loss internals - current batch]
+mean_weight:           2.2635
+max_weight:            5.0000
+n_high y>=0.7:       19
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4591 / 1.0000 / 0.3243
+pred   min/mean/max/std: 0.0286 / 0.5565 / 0.9843 / 0.3133
+std_ratio pred/target: 0.9661
+high targets y>=0.7 | n=19 | high_mae=0.089401 | high_under_mae=0.014250
+
+[First predictions]
+  y=0.790 | pred=0.936
+  y=0.950 | pred=0.984
+  y=0.000 | pred=0.030
+  y=0.260 | pred=0.485
+  y=0.310 | pred=0.524
+  y=0.200 | pred=0.262
+  y=0.630 | pred=0.438
+  y=0.020 | pred=0.290
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 7/25 | step 00553]
+train_eval_mse:        0.017934
+train_eval_rmse:       0.133917
+train_eval_mae:        0.099072
+train_eval_corr:       0.9225
+train_eval_r2:         0.8356
+train_eval_target min/mean/max/std: 0.0000 / 0.5288 / 1.0000 / 0.3302
+train_eval_pred   min/mean/max/std: 0.0205 / 0.5582 / 0.9853 / 0.3333
+train_eval_std_ratio pred/target: 1.0092
+train_eval_high_targets y>=0.70 | n=1863 | high_mae=0.071099 | high_mse=0.009515 | high_under_mae=0.026789
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 7/25 | step 00553]
+val_mse:        0.037492
+val_rmse:       0.193629
+val_mae:        0.159954
+val_corr:       0.7400
+val_r2:         0.5467
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0788 / 0.5369 / 0.9709 / 0.2208
+val_std_ratio pred/target: 0.7676
+val_high_targets y>=0.70 | n=36 | high_mae=0.162117 | high_mse=0.036779 | high_under_mae=0.146348
+
+[Checkpoint selection scores]
+overall_score: 1.062242
+train_score:   1.243579
+val_score:     0.725474
+best_so_far:   0.901902
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[Saved BEST overall] /content/score_net_checkpoints/score_net_best_overall.pt
+
+==================================================
+EPOCH 8/25
+==================================================
+
+--------------------------------------------------
+[Step 00600 | Epoch 8/25 | Batch 47/79]
+lr:                    0.00024304
+
+[Train objective]
+avg_total_loss:        0.074238
+avg_weighted_mse:      0.037337
+avg_mae_loss:          0.104109
+avg_std_loss:          0.010603
+avg_high_under_loss:   0.003448
+
+[Train diagnostics]
+last_plain_mse:        0.010344
+last_plain_rmse:       0.101708
+avg_mae:               0.104109
+avg_corr:              0.9149
+avg_r2:                0.8077
+last_mae:              0.074453
+last_corr:             0.9601
+last_r2:               0.9137
+grad_norm:             0.6853
+
+[Loss internals - current batch]
+mean_weight:           2.6715
+max_weight:            5.0000
+n_high y>=0.7:       26
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5459 / 1.0000 / 0.3461
+pred   min/mean/max/std: 0.0335 / 0.5765 / 0.9876 / 0.3251
+std_ratio pred/target: 0.9393
+high targets y>=0.7 | n=26 | high_mae=0.042265 | high_under_mae=0.025263
+
+[First predictions]
+  y=0.050 | pred=0.245
+  y=0.110 | pred=0.142
+  y=0.960 | pred=0.979
+  y=0.540 | pred=0.665
+  y=0.980 | pred=0.953
+  y=0.410 | pred=0.521
+  y=0.840 | pred=0.843
+  y=0.620 | pred=0.791
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 8/25 | step 00632]
+train_eval_mse:        0.016623
+train_eval_rmse:       0.128930
+train_eval_mae:        0.094862
+train_eval_corr:       0.9266
+train_eval_r2:         0.8434
+train_eval_target min/mean/max/std: 0.0000 / 0.5381 / 1.0000 / 0.3258
+train_eval_pred   min/mean/max/std: 0.0183 / 0.5436 / 0.9869 / 0.3416
+train_eval_std_ratio pred/target: 1.0487
+train_eval_high_targets y>=0.70 | n=1872 | high_mae=0.064464 | high_mse=0.008232 | high_under_mae=0.029974
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 8/25 | step 00632]
+val_mse:        0.062845
+val_rmse:       0.250689
+val_mae:        0.203920
+val_corr:       0.5348
+val_r2:         0.2401
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0579 / 0.5346 / 0.9377 / 0.2152
+val_std_ratio pred/target: 0.7482
+val_high_targets y>=0.70 | n=36 | high_mae=0.177174 | high_mse=0.048755 | high_under_mae=0.171128
+
+[Checkpoint selection scores]
+overall_score: 0.916329
+train_score:   1.242480
+val_score:     0.310621
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 9/25
+==================================================
+
+--------------------------------------------------
+[Step 00650 | Epoch 9/25 | Batch 18/79]
+lr:                    0.00023404
+
+[Train objective]
+avg_total_loss:        0.077627
+avg_weighted_mse:      0.038633
+avg_mae_loss:          0.104629
+avg_std_loss:          0.012421
+avg_high_under_loss:   0.004072
+
+[Train diagnostics]
+last_plain_mse:        0.014685
+last_plain_rmse:       0.121180
+avg_mae:               0.104629
+avg_corr:              0.9175
+avg_r2:                0.8109
+last_mae:              0.089495
+last_corr:             0.9403
+last_r2:               0.8804
+grad_norm:             1.3744
+
+[Loss internals - current batch]
+mean_weight:           2.7197
+max_weight:            5.0000
+n_high y>=0.7:       26
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5542 / 1.0000 / 0.3504
+pred   min/mean/max/std: 0.0209 / 0.5756 / 0.9827 / 0.3336
+std_ratio pred/target: 0.9522
+high targets y>=0.7 | n=26 | high_mae=0.061109 | high_under_mae=0.032728
+
+[First predictions]
+  y=0.890 | pred=0.914
+  y=0.080 | pred=0.560
+  y=0.920 | pred=0.821
+  y=0.080 | pred=0.211
+  y=0.360 | pred=0.423
+  y=0.590 | pred=0.595
+  y=0.220 | pred=0.162
+  y=0.350 | pred=0.380
+
+--------------------------------------------------
+[Step 00700 | Epoch 9/25 | Batch 68/79]
+lr:                    0.00022461
+
+[Train objective]
+avg_total_loss:        0.071719
+avg_weighted_mse:      0.035228
+avg_mae_loss:          0.099438
+avg_std_loss:          0.012473
+avg_high_under_loss:   0.003669
+
+[Train diagnostics]
+last_plain_mse:        0.020419
+last_plain_rmse:       0.142895
+avg_mae:               0.099438
+avg_corr:              0.9248
+avg_r2:                0.8307
+last_mae:              0.110114
+last_corr:             0.8866
+last_r2:               0.7583
+grad_norm:             1.1581
+
+[Loss internals - current batch]
+mean_weight:           2.4339
+max_weight:            5.0000
+n_high y>=0.7:       20
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5234 / 1.0000 / 0.2907
+pred   min/mean/max/std: 0.0224 / 0.5626 / 0.9842 / 0.2863
+std_ratio pred/target: 0.9850
+high targets y>=0.7 | n=20 | high_mae=0.075042 | high_under_mae=0.024769
+
+[First predictions]
+  y=0.130 | pred=0.091
+  y=0.490 | pred=0.574
+  y=0.820 | pred=0.604
+  y=0.930 | pred=0.938
+  y=0.850 | pred=0.955
+  y=0.900 | pred=0.954
+  y=0.870 | pred=0.877
+  y=0.090 | pred=0.310
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 9/25 | step 00711]
+train_eval_mse:        0.014654
+train_eval_rmse:       0.121055
+train_eval_mae:        0.090595
+train_eval_corr:       0.9319
+train_eval_r2:         0.8653
+train_eval_target min/mean/max/std: 0.0000 / 0.5179 / 1.0000 / 0.3298
+train_eval_pred   min/mean/max/std: 0.0197 / 0.5235 / 0.9837 / 0.3248
+train_eval_std_ratio pred/target: 0.9850
+train_eval_high_targets y>=0.70 | n=1785 | high_mae=0.064425 | high_mse=0.008141 | high_under_mae=0.037501
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 9/25 | step 00711]
+val_mse:        0.088640
+val_rmse:       0.297725
+val_mae:        0.246693
+val_corr:       0.2598
+val_r2:         -0.0718
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.1420 / 0.5244 / 0.9146 / 0.1809
+val_std_ratio pred/target: 0.6291
+val_high_targets y>=0.70 | n=36 | high_mae=0.241955 | high_mse=0.074671 | high_under_mae=0.235840
+
+[Checkpoint selection scores]
+overall_score: 0.741294
+train_score:   1.264668
+val_score:     -0.230686
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 10/25
+==================================================
+
+--------------------------------------------------
+[Step 00750 | Epoch 10/25 | Batch 39/79]
+lr:                    0.00021480
+
+[Train objective]
+avg_total_loss:        0.070967
+avg_weighted_mse:      0.035041
+avg_mae_loss:          0.100137
+avg_std_loss:          0.011739
+avg_high_under_loss:   0.003435
+
+[Train diagnostics]
+last_plain_mse:        0.017846
+last_plain_rmse:       0.133589
+avg_mae:               0.100137
+avg_corr:              0.9244
+avg_r2:                0.8264
+last_mae:              0.102195
+last_corr:             0.9426
+last_r2:               0.8537
+grad_norm:             0.6052
+
+[Loss internals - current batch]
+mean_weight:           2.3059
+max_weight:            5.0000
+n_high y>=0.7:       20
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4522 / 1.0000 / 0.3493
+pred   min/mean/max/std: 0.0210 / 0.5172 / 0.9824 / 0.3327
+std_ratio pred/target: 0.9525
+high targets y>=0.7 | n=20 | high_mae=0.051847 | high_under_mae=0.015947
+
+[First predictions]
+  y=0.940 | pred=0.976
+  y=0.810 | pred=0.932
+  y=0.070 | pred=0.037
+  y=0.000 | pred=0.026
+  y=0.930 | pred=0.965
+  y=0.470 | pred=0.386
+  y=0.580 | pred=0.680
+  y=0.090 | pred=0.487
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 10/25 | step 00790]
+train_eval_mse:        0.014093
+train_eval_rmse:       0.118713
+train_eval_mae:        0.087791
+train_eval_corr:       0.9423
+train_eval_r2:         0.8727
+train_eval_target min/mean/max/std: 0.0000 / 0.5190 / 1.0000 / 0.3327
+train_eval_pred   min/mean/max/std: 0.0138 / 0.5346 / 0.9865 / 0.3514
+train_eval_std_ratio pred/target: 1.0561
+train_eval_high_targets y>=0.70 | n=1761 | high_mae=0.062943 | high_mse=0.007570 | high_under_mae=0.019957
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 10/25 | step 00790]
+val_mse:        0.065296
+val_rmse:       0.255531
+val_mae:        0.211363
+val_corr:       0.5491
+val_r2:         0.2105
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0432 / 0.5196 / 0.9637 / 0.2423
+val_std_ratio pred/target: 0.8425
+val_high_targets y>=0.70 | n=36 | high_mae=0.190774 | high_mse=0.055878 | high_under_mae=0.174272
+
+[Checkpoint selection scores]
+overall_score: 0.948466
+train_score:   1.283776
+val_score:     0.325747
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 11/25
+==================================================
+
+--------------------------------------------------
+[Step 00800 | Epoch 11/25 | Batch 10/79]
+lr:                    0.00020467
+
+[Train objective]
+avg_total_loss:        0.064390
+avg_weighted_mse:      0.030583
+avg_mae_loss:          0.092728
+avg_std_loss:          0.008912
+avg_high_under_loss:   0.003393
+
+[Train diagnostics]
+last_plain_mse:        0.017748
+last_plain_rmse:       0.133220
+avg_mae:               0.092728
+avg_corr:              0.9342
+avg_r2:                0.8540
+last_mae:              0.104802
+last_corr:             0.9296
+last_r2:               0.8391
+grad_norm:             0.8805
+
+[Loss internals - current batch]
+mean_weight:           2.4207
+max_weight:            5.0000
+n_high y>=0.7:       21
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4948 / 1.0000 / 0.3321
+pred   min/mean/max/std: 0.0163 / 0.5437 / 0.9878 / 0.3284
+std_ratio pred/target: 0.9887
+high targets y>=0.7 | n=21 | high_mae=0.063972 | high_under_mae=0.025200
+
+[First predictions]
+  y=0.020 | pred=0.046
+  y=0.850 | pred=0.960
+  y=0.260 | pred=0.418
+  y=0.430 | pred=0.734
+  y=0.310 | pred=0.428
+  y=0.120 | pred=0.267
+  y=0.620 | pred=0.685
+  y=0.470 | pred=0.412
+
+--------------------------------------------------
+[Step 00850 | Epoch 11/25 | Batch 60/79]
+lr:                    0.00019429
+
+[Train objective]
+avg_total_loss:        0.065276
+avg_weighted_mse:      0.031834
+avg_mae_loss:          0.093230
+avg_std_loss:          0.012395
+avg_high_under_loss:   0.003172
+
+[Train diagnostics]
+last_plain_mse:        0.017372
+last_plain_rmse:       0.131803
+avg_mae:               0.093230
+avg_corr:              0.9326
+avg_r2:                0.8460
+last_mae:              0.086936
+last_corr:             0.9381
+last_r2:               0.8418
+grad_norm:             0.6442
+
+[Loss internals - current batch]
+mean_weight:           2.3483
+max_weight:            5.0000
+n_high y>=0.7:       21
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4767 / 1.0000 / 0.3314
+pred   min/mean/max/std: 0.0258 / 0.5266 / 0.9819 / 0.3522
+std_ratio pred/target: 1.0627
+high targets y>=0.7 | n=21 | high_mae=0.076542 | high_under_mae=0.012158
+
+[First predictions]
+  y=0.810 | pred=0.918
+  y=0.910 | pred=0.774
+  y=0.190 | pred=0.185
+  y=0.180 | pred=0.075
+  y=0.810 | pred=0.859
+  y=0.230 | pred=0.179
+  y=0.080 | pred=0.048
+  y=0.000 | pred=0.058
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 11/25 | step 00869]
+train_eval_mse:        0.012477
+train_eval_rmse:       0.111700
+train_eval_mae:        0.083310
+train_eval_corr:       0.9487
+train_eval_r2:         0.8862
+train_eval_target min/mean/max/std: 0.0000 / 0.5281 / 1.0000 / 0.3311
+train_eval_pred   min/mean/max/std: 0.0161 / 0.5493 / 0.9853 / 0.3470
+train_eval_std_ratio pred/target: 1.0481
+train_eval_high_targets y>=0.70 | n=1845 | high_mae=0.059857 | high_mse=0.006660 | high_under_mae=0.019995
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 11/25 | step 00869]
+val_mse:        0.052047
+val_rmse:       0.228139
+val_mae:        0.186106
+val_corr:       0.6414
+val_r2:         0.3707
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0487 / 0.5020 / 0.9368 / 0.2284
+val_std_ratio pred/target: 0.7941
+val_high_targets y>=0.70 | n=36 | high_mae=0.191620 | high_mse=0.054626 | high_under_mae=0.183966
+
+[Checkpoint selection scores]
+overall_score: 1.020728
+train_score:   1.302339
+val_score:     0.497738
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 12/25
+==================================================
+
+--------------------------------------------------
+[Step 00900 | Epoch 12/25 | Batch 31/79]
+lr:                    0.00018373
+
+[Train objective]
+avg_total_loss:        0.064603
+avg_weighted_mse:      0.031330
+avg_mae_loss:          0.092827
+avg_std_loss:          0.012638
+avg_high_under_loss:   0.003145
+
+[Train diagnostics]
+last_plain_mse:        0.010644
+last_plain_rmse:       0.103167
+avg_mae:               0.092827
+avg_corr:              0.9380
+avg_r2:                0.8537
+last_mae:              0.078811
+last_corr:             0.9519
+last_r2:               0.8988
+grad_norm:             0.4853
+
+[Loss internals - current batch]
+mean_weight:           2.5851
+max_weight:            4.9204
+n_high y>=0.7:       24
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5395 / 0.9900 / 0.3243
+pred   min/mean/max/std: 0.0190 / 0.5589 / 0.9856 / 0.3284
+std_ratio pred/target: 1.0127
+high targets y>=0.7 | n=24 | high_mae=0.063106 | high_under_mae=0.019617
+
+[First predictions]
+  y=0.700 | pred=0.863
+  y=0.170 | pred=0.213
+  y=0.350 | pred=0.064
+  y=0.630 | pred=0.724
+  y=0.250 | pred=0.375
+  y=0.950 | pred=0.981
+  y=0.600 | pred=0.730
+  y=0.430 | pred=0.272
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 12/25 | step 00948]
+train_eval_mse:        0.013991
+train_eval_rmse:       0.118285
+train_eval_mae:        0.086897
+train_eval_corr:       0.9421
+train_eval_r2:         0.8706
+train_eval_target min/mean/max/std: 0.0000 / 0.5144 / 1.0000 / 0.3288
+train_eval_pred   min/mean/max/std: 0.0131 / 0.5342 / 0.9852 / 0.3479
+train_eval_std_ratio pred/target: 1.0579
+train_eval_high_targets y>=0.70 | n=1730 | high_mae=0.058118 | high_mse=0.006224 | high_under_mae=0.018861
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 12/25 | step 00948]
+val_mse:        0.091227
+val_rmse:       0.302038
+val_mae:        0.240590
+val_corr:       0.3117
+val_r2:         -0.1031
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0771 / 0.5570 / 0.9349 / 0.2172
+val_std_ratio pred/target: 0.7552
+val_high_targets y>=0.70 | n=36 | high_mae=0.196978 | high_mse=0.057748 | high_under_mae=0.184918
+
+[Checkpoint selection scores]
+overall_score: 0.792292
+train_score:   1.283648
+val_score:     -0.120228
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 13/25
+==================================================
+
+--------------------------------------------------
+[Step 00950 | Epoch 13/25 | Batch 2/79]
+lr:                    0.00017305
+
+[Train objective]
+avg_total_loss:        0.063305
+avg_weighted_mse:      0.029976
+avg_mae_loss:          0.090638
+avg_std_loss:          0.012254
+avg_high_under_loss:   0.003352
+
+[Train diagnostics]
+last_plain_mse:        0.015806
+last_plain_rmse:       0.125720
+avg_mae:               0.090638
+avg_corr:              0.9379
+avg_r2:                0.8608
+last_mae:              0.091507
+last_corr:             0.9295
+last_r2:               0.8580
+grad_norm:             0.8890
+
+[Loss internals - current batch]
+mean_weight:           2.6629
+max_weight:            5.0000
+n_high y>=0.7:       24
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5517 / 1.0000 / 0.3337
+pred   min/mean/max/std: 0.0289 / 0.5723 / 0.9840 / 0.3253
+std_ratio pred/target: 0.9749
+high targets y>=0.7 | n=24 | high_mae=0.062147 | high_under_mae=0.033688
+
+[First predictions]
+  y=0.340 | pred=0.270
+  y=0.390 | pred=0.241
+  y=0.940 | pred=0.875
+  y=0.000 | pred=0.055
+  y=0.350 | pred=0.623
+  y=0.860 | pred=0.940
+  y=1.000 | pred=0.981
+  y=0.620 | pred=0.835
+
+--------------------------------------------------
+[Step 01000 | Epoch 13/25 | Batch 52/79]
+lr:                    0.00016232
+
+[Train objective]
+avg_total_loss:        0.059070
+avg_weighted_mse:      0.028344
+avg_mae_loss:          0.087625
+avg_std_loss:          0.010803
+avg_high_under_loss:   0.002760
+
+[Train diagnostics]
+last_plain_mse:        0.017763
+last_plain_rmse:       0.133280
+avg_mae:               0.087625
+avg_corr:              0.9429
+avg_r2:                0.8673
+last_mae:              0.097791
+last_corr:             0.9333
+last_r2:               0.8395
+grad_norm:             0.7719
+
+[Loss internals - current batch]
+mean_weight:           2.4051
+max_weight:            5.0000
+n_high y>=0.7:       19
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4905 / 1.0000 / 0.3327
+pred   min/mean/max/std: 0.0160 / 0.5468 / 0.9865 / 0.3281
+std_ratio pred/target: 0.9860
+high targets y>=0.7 | n=19 | high_mae=0.059860 | high_under_mae=0.019603
+
+[First predictions]
+  y=0.050 | pred=0.016
+  y=0.690 | pred=0.634
+  y=0.000 | pred=0.051
+  y=0.950 | pred=0.880
+  y=0.000 | pred=0.016
+  y=0.870 | pred=0.986
+  y=0.060 | pred=0.063
+  y=0.520 | pred=0.509
+
+================ VALIDATION ================
+[Validation at step 01000]
+val_mse:        0.051616
+val_rmse:       0.227191
+val_mae:        0.180285
+val_corr:       0.6474
+val_r2:         0.3759
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0651 / 0.5463 / 0.9483 / 0.2456
+val_std_ratio pred/target: 0.8541
+val_high_targets y>=0.70 | n=36 | high_mae=0.155960 | high_mse=0.039125 | high_under_mae=0.141372
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 13/25 | step 01027]
+train_eval_mse:        0.010653
+train_eval_rmse:       0.103212
+train_eval_mae:        0.076250
+train_eval_corr:       0.9544
+train_eval_r2:         0.9034
+train_eval_target min/mean/max/std: 0.0000 / 0.5295 / 1.0000 / 0.3320
+train_eval_pred   min/mean/max/std: 0.0124 / 0.5407 / 0.9856 / 0.3435
+train_eval_std_ratio pred/target: 1.0347
+train_eval_high_targets y>=0.70 | n=1868 | high_mae=0.060565 | high_mse=0.006660 | high_under_mae=0.024009
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 13/25 | step 01027]
+val_mse:        0.056116
+val_rmse:       0.236888
+val_mae:        0.191970
+val_corr:       0.5994
+val_r2:         0.3215
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0659 / 0.5155 / 0.9350 / 0.2226
+val_std_ratio pred/target: 0.7742
+val_high_targets y>=0.70 | n=36 | high_mae=0.182798 | high_mse=0.049143 | high_under_mae=0.172147
+
+[Checkpoint selection scores]
+overall_score: 1.010159
+train_score:   1.322240
+val_score:     0.430580
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 14/25
+==================================================
+
+--------------------------------------------------
+[Step 01050 | Epoch 14/25 | Batch 23/79]
+lr:                    0.00015160
+
+[Train objective]
+avg_total_loss:        0.056671
+avg_weighted_mse:      0.027314
+avg_mae_loss:          0.086123
+avg_std_loss:          0.011201
+avg_high_under_loss:   0.002422
+
+[Train diagnostics]
+last_plain_mse:        0.013077
+last_plain_rmse:       0.114356
+avg_mae:               0.086123
+avg_corr:              0.9432
+avg_r2:                0.8727
+last_mae:              0.083962
+last_corr:             0.9408
+last_r2:               0.8824
+grad_norm:             0.7160
+
+[Loss internals - current batch]
+mean_weight:           2.5461
+max_weight:            5.0000
+n_high y>=0.7:       22
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5247 / 1.0000 / 0.3335
+pred   min/mean/max/std: 0.0105 / 0.5390 / 0.9874 / 0.3227
+std_ratio pred/target: 0.9677
+high targets y>=0.7 | n=22 | high_mae=0.050591 | high_under_mae=0.035440
+
+[First predictions]
+  y=0.020 | pred=0.158
+  y=1.000 | pred=0.987
+  y=0.500 | pred=0.416
+  y=0.570 | pred=0.598
+  y=0.090 | pred=0.282
+  y=0.000 | pred=0.024
+  y=0.570 | pred=0.710
+  y=1.000 | pred=0.963
+
+--------------------------------------------------
+[Step 01100 | Epoch 14/25 | Batch 73/79]
+lr:                    0.00014097
+
+[Train objective]
+avg_total_loss:        0.061066
+avg_weighted_mse:      0.029210
+avg_mae_loss:          0.089528
+avg_std_loss:          0.009386
+avg_high_under_loss:   0.003002
+
+[Train diagnostics]
+last_plain_mse:        0.021989
+last_plain_rmse:       0.148287
+avg_mae:               0.089528
+avg_corr:              0.9423
+avg_r2:                0.8635
+last_mae:              0.105893
+last_corr:             0.9305
+last_r2:               0.7892
+grad_norm:             0.5486
+
+[Loss internals - current batch]
+mean_weight:           2.2010
+max_weight:            5.0000
+n_high y>=0.7:       16
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.4427 / 1.0000 / 0.3229
+pred   min/mean/max/std: 0.0209 / 0.5258 / 0.9871 / 0.3333
+std_ratio pred/target: 1.0320
+high targets y>=0.7 | n=16 | high_mae=0.063636 | high_under_mae=0.009042
+
+[First predictions]
+  y=0.240 | pred=0.327
+  y=0.680 | pred=0.649
+  y=0.140 | pred=0.213
+  y=0.870 | pred=0.910
+  y=0.710 | pred=0.934
+  y=0.940 | pred=0.979
+  y=0.380 | pred=0.431
+  y=0.100 | pred=0.190
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 14/25 | step 01106]
+train_eval_mse:        0.011351
+train_eval_rmse:       0.106539
+train_eval_mae:        0.079069
+train_eval_corr:       0.9512
+train_eval_r2:         0.8944
+train_eval_target min/mean/max/std: 0.0000 / 0.5233 / 1.0000 / 0.3279
+train_eval_pred   min/mean/max/std: 0.0128 / 0.5471 / 0.9857 / 0.3354
+train_eval_std_ratio pred/target: 1.0229
+train_eval_high_targets y>=0.70 | n=1794 | high_mae=0.056172 | high_mse=0.005619 | high_under_mae=0.019194
+
+================ END OF EPOCH VALIDATION ================
+[Val eval epoch 14/25 | step 01106]
+val_mse:        0.070225
+val_rmse:       0.265000
+val_mae:        0.215692
+val_corr:       0.4533
+val_r2:         0.1509
+val_target min/mean/max/std: 0.0000 / 0.5400 / 0.9900 / 0.2876
+val_pred   min/mean/max/std: 0.0740 / 0.5422 / 0.9223 / 0.1975
+val_std_ratio pred/target: 0.6867
+val_high_targets y>=0.70 | n=36 | high_mae=0.191304 | high_mse=0.052580 | high_under_mae=0.183424
+
+[Checkpoint selection scores]
+overall_score: 0.910248
+train_score:   1.319053
+val_score:     0.151038
+best_so_far:   1.062242
+[Saved last] /content/score_net_checkpoints/score_net_last.pt
+[BEST unchanged]
+
+==================================================
+EPOCH 15/25
+==================================================
+
+--------------------------------------------------
+[Step 01150 | Epoch 15/25 | Batch 44/79]
+lr:                    0.00013049
+
+[Train objective]
+avg_total_loss:        0.056534
+avg_weighted_mse:      0.026151
+avg_mae_loss:          0.084236
+avg_std_loss:          0.010987
+avg_high_under_loss:   0.002925
+
+[Train diagnostics]
+last_plain_mse:        0.008184
+last_plain_rmse:       0.090468
+avg_mae:               0.084236
+avg_corr:              0.9488
+avg_r2:                0.8841
+last_mae:              0.069621
+last_corr:             0.9765
+last_r2:               0.9413
+grad_norm:             0.7166
+
+[Loss internals - current batch]
+mean_weight:           2.7426
+max_weight:            5.0000
+n_high y>=0.7:       27
+
+[Current batch ranges]
+target min/mean/max/std: 0.0000 / 0.5444 / 1.0000 / 0.3732
+pred   min/mean/max/std: 0.0093 / 0.5772 / 0.9804 / 0.3395
+std_ratio pred/target: 0.9096
+high targets y>=0.7 | n=27 | high_mae=0.046694 | high_under_mae=0.028801
+
+[First predictions]
+  y=0.910 | pred=0.894
+  y=0.940 | pred=0.965
+  y=0.000 | pred=0.020
+  y=0.320 | pred=0.415
+  y=0.940 | pred=0.919
+  y=0.890 | pred=0.774
+  y=0.080 | pred=0.157
+  y=0.490 | pred=0.612
+
+================ END OF EPOCH TRAIN EVAL ================
+[Train eval epoch 15/25 | step 01185]
+train_eval_mse:        0.009419
+train_eval_rmse:       0.097054
+train_eval_mae:        0.073160
+train_eval_corr:       0.9592
+train_eval_r2:         0.9143
+train_eval_target min/mean/max/std: 0.0000 / 0.5273 / 1.0000 / 0.3315
+train_eval_pred   min/mean/max/std: 0.0109 / 0.5434 / 0.9838 / 0.3376
+train_eval_std_ratio pred/target: 1.0183
+train_eval_high_targets y>=0.70 | n=1823 | high_mae=0.057720 | high_mse=0.005919 | high_under_mae=0.024512
+
+================ END OF EPOCH VALIDATION ================
