@@ -1,0 +1,14 @@
+{
+  "annotation_zip": "data/results_labeling/results_translated_json.zip",
+  "created_at_utc": "2026-05-18T02:49:44.514412+00:00",
+  "dataset_version": "local_subset_v1",
+  "flag_counts": {
+    "blur": 1
+  },
+  "image_count": 56,
+  "image_zip": "data/data_subset/subset_50.zip",
+  "manifest_csv": "data/manifests/local_subset_v1_quality_manifest.csv",
+  "manifest_json": "data/manifests/local_subset_v1_quality_manifest.json",
+  "source": "FFHQ-derived local subset",
+  "total_annotations": 591
+}

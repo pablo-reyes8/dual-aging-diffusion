@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Image Quality Manifest",
+  "type": "object",
+  "required": ["dataset_version", "created_at_utc", "summary", "records"],
+  "properties": {
+    "dataset_version": {"type": "string"},
+    "created_at_utc": {"type": "string"},
+    "summary": {"type": "object"},
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["image_id", "path", "sha256", "width", "height", "flags"],
+        "properties": {
+          "image_id": {"type": "string"},
+          "path": {"type": "string"},
+          "sha256": {"type": "string"},
+          "width": {"type": "integer"},
+          "height": {"type": "integer"},
+          "format": {"type": ["string", "null"]},
+          "mode": {"type": "string"},
+          "file_size_bytes": {"type": "integer"},
+          "blur_variance": {"type": "number"},
+          "mean_luma": {"type": "number"},
+          "dark_pixel_fraction": {"type": "number"},
+          "bright_pixel_fraction": {"type": "number"},
+          "noise_score": {"type": "number"},
+          "bytes_per_pixel": {"type": "number"},
+          "annotation_count": {"type": "integer"},
+          "invalid_crop_count": {"type": "integer"},
+          "flags": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}
+

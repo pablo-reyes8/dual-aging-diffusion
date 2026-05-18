@@ -1,0 +1,55 @@
+dataset_versions:
+  local_subset_v1:
+    description: "Repository-local FFHQ-derived subset used for local branch development and smoke audits."
+    source: "FFHQ-derived local subset"
+    image_zip: "data/data_subset/subset_50.zip"
+    image_dir: "data/data_subset/subset_50_extracted"
+    annotation_zip: "data/results_labeling/results_translated_json.zip"
+    annotation_dir: "data/results_labeling/results_translated_json"
+    global_attribute_csv: "data/ffhq_predictions/ffhq_face_attribute_prompts.csv"
+    outputs:
+      manifest_csv: "data/manifests/local_subset_v1_quality_manifest.csv"
+      manifest_json: "data/manifests/local_subset_v1_quality_manifest.json"
+      snapshot_json: "data/manifests/local_subset_v1_snapshot.json"
+    thresholds:
+      min_width: 128
+      min_height: 128
+      blur_variance_min: 25.0
+      mean_luma_min: 35.0
+      mean_luma_max: 220.0
+      dark_pixel_fraction_max: 0.40
+      bright_pixel_fraction_max: 0.40
+      noise_score_max: 55.0
+      bytes_per_pixel_min: 0.08
+      crop_min_area: 64
+    governance:
+      contains_faces: true
+      source_dataset_family: "FFHQ"
+      sensitive_attributes:
+        - apparent_age
+        - gender
+        - skin_tone
+        - hair
+        - glasses
+
+  global_ffhq_extremes_drive_v1:
+    description: "External FFHQ subset for the global branch. Paths are Drive/Colab defaults and should be overridden when needed."
+    source: "FFHQ-derived global subset"
+    image_zips:
+      - "/content/drive/MyDrive/ffhq_subset_6k_extremes-001.zip"
+      - "/content/drive/MyDrive/ffhq_subset_6k_extremes-002.zip"
+      - "/content/drive/MyDrive/ffhq_subset_6k_extremes-003.zip"
+      - "/content/drive/MyDrive/ffhq_subset_6k_extremes-004.zip"
+    image_dir: "/content/ffhq_subset_6k_extremes_local"
+    attribute_csv: "/content/ffhq_face_attribute_prompts.csv"
+    thresholds:
+      min_width: 256
+      min_height: 256
+      blur_variance_min: 25.0
+      mean_luma_min: 35.0
+      mean_luma_max: 220.0
+      dark_pixel_fraction_max: 0.40
+      bright_pixel_fraction_max: 0.40
+      noise_score_max: 55.0
+      bytes_per_pixel_min: 0.08
+

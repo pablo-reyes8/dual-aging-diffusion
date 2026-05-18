@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local Aging Annotation",
+  "type": "object",
+  "required": ["image_id", "all_slots"],
+  "properties": {
+    "image_id": {"type": "string"},
+    "all_slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["region_key", "bbox", "score"],
+        "properties": {
+          "region_key": {"type": "string"},
+          "region_name": {"type": "string"},
+          "region_alias": {"type": "string"},
+          "label_id": {"type": "string"},
+          "box_index": {"type": ["integer", "string"]},
+          "score": {"type": ["number", "integer"]},
+          "omitted": {"type": ["boolean", "null"]},
+          "ethnicity": {"type": ["string", "null"]},
+          "bbox": {
+            "type": "object",
+            "required": ["x", "y", "w", "h"],
+            "properties": {
+              "x": {"type": ["number", "integer"]},
+              "y": {"type": ["number", "integer"]},
+              "w": {"type": ["number", "integer"]},
+              "h": {"type": ["number", "integer"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

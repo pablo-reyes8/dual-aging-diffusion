@@ -135,9 +135,40 @@ Run the global audit in an environment where the Drive paths exist:
 python -m scripts.data_cli --config configs/data/global_data.yaml --branch global
 ```
 
+## DataOps Quality Manifests
+
+The DataOps layer adds dataset version definitions, schemas, governance notes, and reproducible quality manifests under `data/`.
+
+The local quality audit is implemented in:
+
+```text
+data/preprocessing/quality_audit.py
+```
+
+It checks:
+
+- blur;
+- overexposure;
+- underexposure;
+- excessive noise;
+- low resolution;
+- strong compression proxy;
+- incorrect crops;
+- annotation/image mismatches.
+
+Run:
+
+```bash
+python -m data.preprocessing.quality_audit \
+  --dataset-version data/configs/dataset_versions.yaml \
+  --version local_subset_v1 \
+  --output-dir data/manifests
+```
+
+The generated manifest records hashes, dimensions, quality metrics, annotation counts, invalid crop counts, region coverage, and flags.
+
 ## Important Data Assumptions
 
 The local branch can be run from the repository fixtures. The global branch assumes the external dataset is available at the configured Drive/Colab paths unless the user overrides those paths in code or config.
 
 The tests do not require downloading the global dataset. They use smoke fixtures and shape-level contracts.
-

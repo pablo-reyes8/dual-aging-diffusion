@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Global Face Attribute CSV",
+  "type": "object",
+  "required": [
+    "filename",
+    "age_pred",
+    "gender_label",
+    "gender_confidence",
+    "skin_tone_label",
+    "hair_label",
+    "glasses_label",
+    "enriched_prompt"
+  ],
+  "properties": {
+    "filename": {"type": "string"},
+    "age_pred": {"type": ["number", "string"]},
+    "gender_pred": {"type": ["string", "null"]},
+    "gender_label": {"type": ["string", "null"]},
+    "gender_confidence": {"type": ["number", "string", "null"]},
+    "skin_tone_label": {"type": ["string", "null"]},
+    "skin_tone_confidence": {"type": ["number", "string", "null"]},
+    "hair_label": {"type": ["string", "null"]},
+    "hair_confidence": {"type": ["number", "string", "null"]},
+    "glasses_label": {"type": ["string", "null"]},
+    "glasses_confidence": {"type": ["number", "string", "null"]},
+    "face_attribute_phrase": {"type": ["string", "null"]},
+    "enriched_prompt": {"type": "string"},
+    "image_path": {"type": ["string", "null"]},
+    "error": {"type": ["string", "null"]}
+  }
+}
+
