@@ -41,7 +41,7 @@ adapters:
     weight_decay: 0.01
 
 score_net:
-  checkpoint_path:
+  checkpoint_path: models/score net/score_net_best_overall.pt
   base_channels: 32
   dropout: 0.15
   strict: true
