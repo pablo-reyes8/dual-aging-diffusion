@@ -1,0 +1,417 @@
+{
+  "image_id": "50374.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\50374.png",
+  "image_meta": {
+    "filename": "50374.png",
+    "stem": "50374",
+    "extension": ".png",
+    "file_size_bytes": 1312512,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:13Z"
+  },
+  "created_at": "2026-05-14T03:30:44Z",
+  "global": {
+    "label_id": 0,
+    "score": 40,
+    "ethnicity": "A portrait of a European white adult woman."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 233,
+            "y": 229,
+            "w": 487,
+            "h": 165
+          },
+          "score": 40,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 462,
+            "y": 358,
+            "w": 123,
+            "h": 97
+          },
+          "score": 20,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "european white adult woman.",
+          "omitted": true,
+          "slot_status": "Missing"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "european white adult woman.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 299,
+            "y": 509,
+            "w": 176,
+            "h": 84
+          },
+          "score": 60,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 585,
+            "y": 506,
+            "w": 160,
+            "h": 90
+          },
+          "score": 40,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 198,
+            "y": 599,
+            "w": 244,
+            "h": 145
+          },
+          "score": 55,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 609,
+            "y": 610,
+            "w": 175,
+            "h": 127
+          },
+          "score": 40,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 405,
+            "y": 661,
+            "w": 259,
+            "h": 64
+          },
+          "score": 10,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 186,
+            "y": 686,
+            "w": 211,
+            "h": 221
+          },
+          "score": 30,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 640,
+            "y": 686,
+            "w": 131,
+            "h": 234
+          },
+          "score": 25,
+          "ethnicity": "european white adult woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "european white adult woman.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 233,
+        "y": 229,
+        "w": 487,
+        "h": 165
+      },
+      "score": 40,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 462,
+        "y": 358,
+        "w": 123,
+        "h": 97
+      },
+      "score": 20,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "european white adult woman.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "european white adult woman.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 299,
+        "y": 509,
+        "w": 176,
+        "h": 84
+      },
+      "score": 60,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 585,
+        "y": 506,
+        "w": 160,
+        "h": 90
+      },
+      "score": 40,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 198,
+        "y": 599,
+        "w": 244,
+        "h": 145
+      },
+      "score": 55,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 609,
+        "y": 610,
+        "w": 175,
+        "h": 127
+      },
+      "score": 40,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 405,
+        "y": 661,
+        "w": 259,
+        "h": 64
+      },
+      "score": 10,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 186,
+        "y": 686,
+        "w": 211,
+        "h": 221
+      },
+      "score": 30,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 640,
+        "y": 686,
+        "w": 131,
+        "h": 234
+      },
+      "score": 25,
+      "ethnicity": "european white adult woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "european white adult woman.",
+      "omitted": true,
+      "slot_status": "Missing"
+    }
+  ]
+}

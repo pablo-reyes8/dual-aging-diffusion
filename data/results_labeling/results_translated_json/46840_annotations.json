@@ -1,0 +1,427 @@
+{
+  "image_id": "46840.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\46840.png",
+  "image_meta": {
+    "filename": "46840.png",
+    "stem": "46840",
+    "extension": ".png",
+    "file_size_bytes": 1553848,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:21:20Z"
+  },
+  "created_at": "2026-05-14T04:02:46Z",
+  "global": {
+    "label_id": 0,
+    "score": 10,
+    "ethnicity": "A portrait of a young adult Asian woman."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 329,
+            "y": 250,
+            "w": 429,
+            "h": 154
+          },
+          "score": 1,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 462,
+            "y": 385,
+            "w": 108,
+            "h": 127
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 724,
+            "y": 415,
+            "w": 77,
+            "h": 147
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 562,
+            "y": 516,
+            "w": 195,
+            "h": 93
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 331,
+            "y": 513,
+            "w": 144,
+            "h": 117
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 310,
+            "y": 622,
+            "w": 137,
+            "h": 129
+          },
+          "score": 5,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 580,
+            "y": 610,
+            "w": 194,
+            "h": 134
+          },
+          "score": 10,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 390,
+            "y": 690,
+            "w": 290,
+            "h": 47
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 612,
+            "y": 703,
+            "w": 153,
+            "h": 182
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 458,
+            "y": 489,
+            "w": 122,
+            "h": 123
+          },
+          "score": 0,
+          "ethnicity": "young adult Asian woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 329,
+        "y": 250,
+        "w": 429,
+        "h": 154
+      },
+      "score": 1,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 462,
+        "y": 385,
+        "w": 108,
+        "h": 127
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 724,
+        "y": 415,
+        "w": 77,
+        "h": 147
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 562,
+        "y": 516,
+        "w": 195,
+        "h": 93
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 331,
+        "y": 513,
+        "w": 144,
+        "h": 117
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 310,
+        "y": 622,
+        "w": 137,
+        "h": 129
+      },
+      "score": 5,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 580,
+        "y": 610,
+        "w": 194,
+        "h": 134
+      },
+      "score": 10,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 390,
+        "y": 690,
+        "w": 290,
+        "h": 47
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 612,
+        "y": 703,
+        "w": 153,
+        "h": 182
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 458,
+        "y": 489,
+        "w": 122,
+        "h": 123
+      },
+      "score": 0,
+      "ethnicity": "young adult Asian woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

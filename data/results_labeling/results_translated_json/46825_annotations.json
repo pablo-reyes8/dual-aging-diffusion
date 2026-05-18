@@ -1,0 +1,427 @@
+{
+  "image_id": "46825.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\46825.png",
+  "image_meta": {
+    "filename": "46825.png",
+    "stem": "46825",
+    "extension": ".png",
+    "file_size_bytes": 1426706,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:20:54Z"
+  },
+  "created_at": "2026-05-14T03:44:19Z",
+  "global": {
+    "label_id": 0,
+    "score": 25,
+    "ethnicity": "A portrait of a young adult white American man."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 282,
+            "y": 223,
+            "w": 493,
+            "h": 202
+          },
+          "score": 26,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 434,
+            "y": 404,
+            "w": 132,
+            "h": 111
+          },
+          "score": 5,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 741,
+            "y": 422,
+            "w": 112,
+            "h": 167
+          },
+          "score": 40,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "young adult white American man.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 292,
+            "y": 498,
+            "w": 160,
+            "h": 98
+          },
+          "score": 30,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 565,
+            "y": 503,
+            "w": 212,
+            "h": 120
+          },
+          "score": 70,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 252,
+            "y": 562,
+            "w": 178,
+            "h": 160
+          },
+          "score": 40,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 570,
+            "y": 575,
+            "w": 246,
+            "h": 147
+          },
+          "score": 60,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "young adult white American man.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 643,
+            "y": 649,
+            "w": 199,
+            "h": 288
+          },
+          "score": 50,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 283,
+            "y": 636,
+            "w": 141,
+            "h": 298
+          },
+          "score": 50,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 459,
+            "y": 488,
+            "w": 91,
+            "h": 141
+          },
+          "score": 25,
+          "ethnicity": "young adult white American man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 282,
+        "y": 223,
+        "w": 493,
+        "h": 202
+      },
+      "score": 26,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 434,
+        "y": 404,
+        "w": 132,
+        "h": 111
+      },
+      "score": 5,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 741,
+        "y": 422,
+        "w": 112,
+        "h": 167
+      },
+      "score": 40,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "young adult white American man.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 292,
+        "y": 498,
+        "w": 160,
+        "h": 98
+      },
+      "score": 30,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 565,
+        "y": 503,
+        "w": 212,
+        "h": 120
+      },
+      "score": 70,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 252,
+        "y": 562,
+        "w": 178,
+        "h": 160
+      },
+      "score": 40,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 570,
+        "y": 575,
+        "w": 246,
+        "h": 147
+      },
+      "score": 60,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "young adult white American man.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 643,
+        "y": 649,
+        "w": 199,
+        "h": 288
+      },
+      "score": 50,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 283,
+        "y": 636,
+        "w": 141,
+        "h": 298
+      },
+      "score": 50,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 459,
+        "y": 488,
+        "w": 91,
+        "h": 141
+      },
+      "score": 25,
+      "ethnicity": "young adult white American man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

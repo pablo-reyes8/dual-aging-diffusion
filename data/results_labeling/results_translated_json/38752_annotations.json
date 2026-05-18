@@ -1,0 +1,407 @@
+{
+  "image_id": "38752.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\38752.png",
+  "image_meta": {
+    "filename": "38752.png",
+    "stem": "38752",
+    "extension": ".png",
+    "file_size_bytes": 1316707,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:13Z"
+  },
+  "created_at": "2026-05-14T04:25:24Z",
+  "global": {
+    "label_id": 0,
+    "score": 60,
+    "ethnicity": "A portrait of an older white man with noticeable signs of aging."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 378,
+            "y": 219,
+            "w": 377,
+            "h": 165
+          },
+          "score": 70,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 458,
+            "y": 368,
+            "w": 90,
+            "h": 97
+          },
+          "score": 60,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 693,
+            "y": 407,
+            "w": 106,
+            "h": 160
+          },
+          "score": 40,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 545,
+            "y": 503,
+            "w": 162,
+            "h": 120
+          },
+          "score": 60,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 337,
+            "y": 502,
+            "w": 120,
+            "h": 107
+          },
+          "score": 70,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 582,
+            "y": 617,
+            "w": 213,
+            "h": 142
+          },
+          "score": 70,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 404,
+            "y": 656,
+            "w": 235,
+            "h": 69
+          },
+          "score": 15,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 593,
+            "y": 707,
+            "w": 192,
+            "h": 175
+          },
+          "score": 35,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "older white man with noticeable signs of aging.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 378,
+        "y": 219,
+        "w": 377,
+        "h": 165
+      },
+      "score": 70,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 458,
+        "y": 368,
+        "w": 90,
+        "h": 97
+      },
+      "score": 60,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 693,
+        "y": 407,
+        "w": 106,
+        "h": 160
+      },
+      "score": 40,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 545,
+        "y": 503,
+        "w": 162,
+        "h": 120
+      },
+      "score": 60,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 337,
+        "y": 502,
+        "w": 120,
+        "h": 107
+      },
+      "score": 70,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 582,
+        "y": 617,
+        "w": 213,
+        "h": 142
+      },
+      "score": 70,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 404,
+        "y": 656,
+        "w": 235,
+        "h": 69
+      },
+      "score": 15,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 593,
+        "y": 707,
+        "w": 192,
+        "h": 175
+      },
+      "score": 35,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "older white man with noticeable signs of aging.",
+      "omitted": true,
+      "slot_status": "Missing"
+    }
+  ]
+}

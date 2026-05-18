@@ -1,0 +1,437 @@
+{
+  "image_id": "58972.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\58972.png",
+  "image_meta": {
+    "filename": "58972.png",
+    "stem": "58972",
+    "extension": ".png",
+    "file_size_bytes": 1158242,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:13Z"
+  },
+  "created_at": "2026-05-14T03:17:14Z",
+  "global": {
+    "label_id": 0,
+    "score": 0,
+    "ethnicity": "A portrait of a young Indian boy with dark hair."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 283,
+            "y": 225,
+            "w": 435,
+            "h": 146
+          },
+          "score": 10,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 439,
+            "y": 357,
+            "w": 141,
+            "h": 135
+          },
+          "score": 10,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 195,
+            "y": 411,
+            "w": 91,
+            "h": 108
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 708,
+            "y": 424,
+            "w": 66,
+            "h": 141
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 263,
+            "y": 499,
+            "w": 176,
+            "h": 108
+          },
+          "score": 10,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 573,
+            "y": 503,
+            "w": 171,
+            "h": 116
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 229,
+            "y": 582,
+            "w": 205,
+            "h": 109
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 593,
+            "y": 610,
+            "w": 154,
+            "h": 127
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 363,
+            "y": 636,
+            "w": 293,
+            "h": 82
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 596,
+            "y": 677,
+            "w": 149,
+            "h": 236
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 462,
+            "y": 468,
+            "w": 118,
+            "h": 122
+          },
+          "score": 0,
+          "ethnicity": "young Indian boy with dark hair.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 283,
+        "y": 225,
+        "w": 435,
+        "h": 146
+      },
+      "score": 10,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 439,
+        "y": 357,
+        "w": 141,
+        "h": 135
+      },
+      "score": 10,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 195,
+        "y": 411,
+        "w": 91,
+        "h": 108
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 708,
+        "y": 424,
+        "w": 66,
+        "h": 141
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 263,
+        "y": 499,
+        "w": 176,
+        "h": 108
+      },
+      "score": 10,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 573,
+        "y": 503,
+        "w": 171,
+        "h": 116
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 229,
+        "y": 582,
+        "w": 205,
+        "h": 109
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 593,
+        "y": 610,
+        "w": 154,
+        "h": 127
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 363,
+        "y": 636,
+        "w": 293,
+        "h": 82
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 596,
+        "y": 677,
+        "w": 149,
+        "h": 236
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 462,
+        "y": 468,
+        "w": 118,
+        "h": 122
+      },
+      "score": 0,
+      "ethnicity": "young Indian boy with dark hair.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

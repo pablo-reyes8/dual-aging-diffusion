@@ -1,0 +1,447 @@
+{
+  "image_id": "50987.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\50987.png",
+  "image_meta": {
+    "filename": "50987.png",
+    "stem": "50987",
+    "extension": ".png",
+    "file_size_bytes": 1442824,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:22:27Z"
+  },
+  "created_at": "2026-05-14T03:32:26Z",
+  "global": {
+    "label_id": 0,
+    "score": 5,
+    "ethnicity": "A portrait of a very young white American girl."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 249,
+            "y": 193,
+            "w": 512,
+            "h": 207
+          },
+          "score": 0,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 458,
+            "y": 375,
+            "w": 112,
+            "h": 114
+          },
+          "score": 0,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 171,
+            "y": 422,
+            "w": 132,
+            "h": 117
+          },
+          "score": 0,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 721,
+            "y": 421,
+            "w": 83,
+            "h": 124
+          },
+          "score": 0,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 263,
+            "y": 512,
+            "w": 189,
+            "h": 91
+          },
+          "score": 10,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 579,
+            "y": 509,
+            "w": 185,
+            "h": 87
+          },
+          "score": 10,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 249,
+            "y": 582,
+            "w": 186,
+            "h": 139
+          },
+          "score": 15,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 596,
+            "y": 587,
+            "w": 169,
+            "h": 131
+          },
+          "score": 35,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 373,
+            "y": 668,
+            "w": 288,
+            "h": 53
+          },
+          "score": 10,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 216,
+            "y": 639,
+            "w": 178,
+            "h": 287
+          },
+          "score": 10,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 629,
+            "y": 658,
+            "w": 140,
+            "h": 237
+          },
+          "score": 30,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 479,
+            "y": 481,
+            "w": 90,
+            "h": 126
+          },
+          "score": 0,
+          "ethnicity": "very young white American girl.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 249,
+        "y": 193,
+        "w": 512,
+        "h": 207
+      },
+      "score": 0,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 458,
+        "y": 375,
+        "w": 112,
+        "h": 114
+      },
+      "score": 0,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 171,
+        "y": 422,
+        "w": 132,
+        "h": 117
+      },
+      "score": 0,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 721,
+        "y": 421,
+        "w": 83,
+        "h": 124
+      },
+      "score": 0,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 263,
+        "y": 512,
+        "w": 189,
+        "h": 91
+      },
+      "score": 10,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 579,
+        "y": 509,
+        "w": 185,
+        "h": 87
+      },
+      "score": 10,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 249,
+        "y": 582,
+        "w": 186,
+        "h": 139
+      },
+      "score": 15,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 596,
+        "y": 587,
+        "w": 169,
+        "h": 131
+      },
+      "score": 35,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 373,
+        "y": 668,
+        "w": 288,
+        "h": 53
+      },
+      "score": 10,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 216,
+        "y": 639,
+        "w": 178,
+        "h": 287
+      },
+      "score": 10,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 629,
+        "y": 658,
+        "w": 140,
+        "h": 237
+      },
+      "score": 30,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 479,
+        "y": 481,
+        "w": 90,
+        "h": 126
+      },
+      "score": 0,
+      "ethnicity": "very young white American girl.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

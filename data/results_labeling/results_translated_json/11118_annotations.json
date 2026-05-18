@@ -1,0 +1,447 @@
+{
+  "image_id": "11118.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\11118.png",
+  "image_meta": {
+    "filename": "11118.png",
+    "stem": "11118",
+    "extension": ".png",
+    "file_size_bytes": 1642960,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:13:43Z"
+  },
+  "created_at": "2026-05-14T04:32:28Z",
+  "global": {
+    "label_id": 0,
+    "score": 70,
+    "ethnicity": "A portrait of an elderly white American woman with pronounced signs of aging."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 303,
+            "y": 228,
+            "w": 438,
+            "h": 159
+          },
+          "score": 68,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 468,
+            "y": 366,
+            "w": 102,
+            "h": 110
+          },
+          "score": 70,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 690,
+            "y": 430,
+            "w": 91,
+            "h": 140
+          },
+          "score": 90,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 219,
+            "y": 439,
+            "w": 110,
+            "h": 141
+          },
+          "score": 90,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 300,
+            "y": 513,
+            "w": 154,
+            "h": 106
+          },
+          "score": 90,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 572,
+            "y": 502,
+            "w": 175,
+            "h": 111
+          },
+          "score": 90,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 269,
+            "y": 606,
+            "w": 166,
+            "h": 145
+          },
+          "score": 67,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 606,
+            "y": 606,
+            "w": 158,
+            "h": 141
+          },
+          "score": 70,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 377,
+            "y": 687,
+            "w": 334,
+            "h": 54
+          },
+          "score": 90,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 229,
+            "y": 687,
+            "w": 189,
+            "h": 240
+          },
+          "score": 99,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 620,
+            "y": 686,
+            "w": 131,
+            "h": 240
+          },
+          "score": 99,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 479,
+            "y": 492,
+            "w": 94,
+            "h": 118
+          },
+          "score": 90,
+          "ethnicity": "elderly white American woman with pronounced signs of aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 303,
+        "y": 228,
+        "w": 438,
+        "h": 159
+      },
+      "score": 68,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 468,
+        "y": 366,
+        "w": 102,
+        "h": 110
+      },
+      "score": 70,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 690,
+        "y": 430,
+        "w": 91,
+        "h": 140
+      },
+      "score": 90,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 219,
+        "y": 439,
+        "w": 110,
+        "h": 141
+      },
+      "score": 90,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 300,
+        "y": 513,
+        "w": 154,
+        "h": 106
+      },
+      "score": 90,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 572,
+        "y": 502,
+        "w": 175,
+        "h": 111
+      },
+      "score": 90,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 269,
+        "y": 606,
+        "w": 166,
+        "h": 145
+      },
+      "score": 67,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 606,
+        "y": 606,
+        "w": 158,
+        "h": 141
+      },
+      "score": 70,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 377,
+        "y": 687,
+        "w": 334,
+        "h": 54
+      },
+      "score": 90,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 229,
+        "y": 687,
+        "w": 189,
+        "h": 240
+      },
+      "score": 99,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 620,
+        "y": 686,
+        "w": 131,
+        "h": 240
+      },
+      "score": 99,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 479,
+        "y": 492,
+        "w": 94,
+        "h": 118
+      },
+      "score": 90,
+      "ethnicity": "elderly white American woman with pronounced signs of aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

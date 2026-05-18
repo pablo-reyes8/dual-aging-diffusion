@@ -1,0 +1,407 @@
+{
+  "image_id": "16056.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\16056.png",
+  "image_meta": {
+    "filename": "16056.png",
+    "stem": "16056",
+    "extension": ".png",
+    "file_size_bytes": 1338106,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:13Z"
+  },
+  "created_at": "2026-05-14T04:44:20Z",
+  "global": {
+    "label_id": 0,
+    "score": 60,
+    "ethnicity": "A portrait of an adult African woman with dark skin."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 333,
+            "y": 225,
+            "w": 451,
+            "h": 155
+          },
+          "score": 56,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 454,
+            "y": 340,
+            "w": 136,
+            "h": 125
+          },
+          "score": 60,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": true,
+          "slot_status": "Missing"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": true,
+          "slot_status": "Missing"
+        },
+        {
+          "box_index": 2,
+          "bbox": null,
+          "score": null,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": true,
+          "slot_status": "Missing"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 274,
+            "y": 600,
+            "w": 184,
+            "h": 132
+          },
+          "score": 46,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 607,
+            "y": 619,
+            "w": 162,
+            "h": 119
+          },
+          "score": 49,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 371,
+            "y": 656,
+            "w": 323,
+            "h": 79
+          },
+          "score": 80,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 269,
+            "y": 668,
+            "w": 148,
+            "h": 210
+          },
+          "score": 67,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 609,
+            "y": 683,
+            "w": 139,
+            "h": 195
+          },
+          "score": 70,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 491,
+            "y": 461,
+            "w": 76,
+            "h": 146
+          },
+          "score": 40,
+          "ethnicity": "adult African woman with dark skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 333,
+        "y": 225,
+        "w": 451,
+        "h": 155
+      },
+      "score": 56,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 454,
+        "y": 340,
+        "w": 136,
+        "h": 125
+      },
+      "score": 60,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": null,
+      "score": null,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": true,
+      "slot_status": "Missing"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 274,
+        "y": 600,
+        "w": 184,
+        "h": 132
+      },
+      "score": 46,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 607,
+        "y": 619,
+        "w": 162,
+        "h": 119
+      },
+      "score": 49,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 371,
+        "y": 656,
+        "w": 323,
+        "h": 79
+      },
+      "score": 80,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 269,
+        "y": 668,
+        "w": 148,
+        "h": 210
+      },
+      "score": 67,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 609,
+        "y": 683,
+        "w": 139,
+        "h": 195
+      },
+      "score": 70,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 491,
+        "y": 461,
+        "w": 76,
+        "h": 146
+      },
+      "score": 40,
+      "ethnicity": "adult African woman with dark skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

@@ -1,0 +1,447 @@
+{
+  "image_id": "01865.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\01865.png",
+  "image_meta": {
+    "filename": "01865.png",
+    "stem": "01865",
+    "extension": ".png",
+    "file_size_bytes": 1379043,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:13Z"
+  },
+  "created_at": "2026-05-14T03:37:30Z",
+  "global": {
+    "label_id": 0,
+    "score": 60,
+    "ethnicity": "A portrait of a large-built Caucasian adult man."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 229,
+            "y": 159,
+            "w": 518,
+            "h": 239
+          },
+          "score": 40,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 472,
+            "y": 366,
+            "w": 107,
+            "h": 126
+          },
+          "score": 30,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 215,
+            "y": 411,
+            "w": 99,
+            "h": 137
+          },
+          "score": 35,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 694,
+            "y": 417,
+            "w": 60,
+            "h": 155
+          },
+          "score": 50,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 307,
+            "y": 496,
+            "w": 144,
+            "h": 101
+          },
+          "score": 60,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 585,
+            "y": 495,
+            "w": 156,
+            "h": 104
+          },
+          "score": 60,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 249,
+            "y": 586,
+            "w": 192,
+            "h": 166
+          },
+          "score": 60,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 612,
+            "y": 579,
+            "w": 132,
+            "h": 180
+          },
+          "score": 50,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 375,
+            "y": 661,
+            "w": 296,
+            "h": 77
+          },
+          "score": 60,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 212,
+            "y": 660,
+            "w": 190,
+            "h": 280
+          },
+          "score": 70,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 630,
+            "y": 678,
+            "w": 122,
+            "h": 255
+          },
+          "score": 80,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 472,
+            "y": 469,
+            "w": 115,
+            "h": 147
+          },
+          "score": 26,
+          "ethnicity": "large-built Caucasian adult man.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 229,
+        "y": 159,
+        "w": 518,
+        "h": 239
+      },
+      "score": 40,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 472,
+        "y": 366,
+        "w": 107,
+        "h": 126
+      },
+      "score": 30,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 215,
+        "y": 411,
+        "w": 99,
+        "h": 137
+      },
+      "score": 35,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 694,
+        "y": 417,
+        "w": 60,
+        "h": 155
+      },
+      "score": 50,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 307,
+        "y": 496,
+        "w": 144,
+        "h": 101
+      },
+      "score": 60,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 585,
+        "y": 495,
+        "w": 156,
+        "h": 104
+      },
+      "score": 60,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 249,
+        "y": 586,
+        "w": 192,
+        "h": 166
+      },
+      "score": 60,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 612,
+        "y": 579,
+        "w": 132,
+        "h": 180
+      },
+      "score": 50,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 375,
+        "y": 661,
+        "w": 296,
+        "h": 77
+      },
+      "score": 60,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 212,
+        "y": 660,
+        "w": 190,
+        "h": 280
+      },
+      "score": 70,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 630,
+        "y": 678,
+        "w": 122,
+        "h": 255
+      },
+      "score": 80,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 472,
+        "y": 469,
+        "w": 115,
+        "h": 147
+      },
+      "score": 26,
+      "ethnicity": "large-built Caucasian adult man.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

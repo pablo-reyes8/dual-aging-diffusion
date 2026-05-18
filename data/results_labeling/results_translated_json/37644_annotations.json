@@ -1,0 +1,447 @@
+{
+  "image_id": "37644.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\37644.png",
+  "image_meta": {
+    "filename": "37644.png",
+    "stem": "37644",
+    "extension": ".png",
+    "file_size_bytes": 1410182,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:14Z"
+  },
+  "created_at": "2026-05-14T03:26:04Z",
+  "global": {
+    "label_id": 0,
+    "score": 30,
+    "ethnicity": "A portrait of an adult Asian woman with fair skin."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 247,
+            "y": 198,
+            "w": 497,
+            "h": 187
+          },
+          "score": 30,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 455,
+            "y": 368,
+            "w": 130,
+            "h": 138
+          },
+          "score": 0,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 201,
+            "y": 430,
+            "w": 113,
+            "h": 145
+          },
+          "score": 0,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 694,
+            "y": 407,
+            "w": 71,
+            "h": 138
+          },
+          "score": 10,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 279,
+            "y": 505,
+            "w": 175,
+            "h": 102
+          },
+          "score": 20,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 577,
+            "y": 499,
+            "w": 157,
+            "h": 97
+          },
+          "score": 15,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 246,
+            "y": 616,
+            "w": 179,
+            "h": 148
+          },
+          "score": 35,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 610,
+            "y": 609,
+            "w": 148,
+            "h": 149
+          },
+          "score": 20,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 368,
+            "y": 687,
+            "w": 290,
+            "h": 64
+          },
+          "score": 15,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 219,
+            "y": 680,
+            "w": 165,
+            "h": 262
+          },
+          "score": 40,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 623,
+            "y": 691,
+            "w": 128,
+            "h": 249
+          },
+          "score": 50,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 466,
+            "y": 499,
+            "w": 116,
+            "h": 131
+          },
+          "score": 10,
+          "ethnicity": "adult Asian woman with fair skin.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 247,
+        "y": 198,
+        "w": 497,
+        "h": 187
+      },
+      "score": 30,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 455,
+        "y": 368,
+        "w": 130,
+        "h": 138
+      },
+      "score": 0,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 201,
+        "y": 430,
+        "w": 113,
+        "h": 145
+      },
+      "score": 0,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 694,
+        "y": 407,
+        "w": 71,
+        "h": 138
+      },
+      "score": 10,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 279,
+        "y": 505,
+        "w": 175,
+        "h": 102
+      },
+      "score": 20,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 577,
+        "y": 499,
+        "w": 157,
+        "h": 97
+      },
+      "score": 15,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 246,
+        "y": 616,
+        "w": 179,
+        "h": 148
+      },
+      "score": 35,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 610,
+        "y": 609,
+        "w": 148,
+        "h": 149
+      },
+      "score": 20,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 368,
+        "y": 687,
+        "w": 290,
+        "h": 64
+      },
+      "score": 15,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 219,
+        "y": 680,
+        "w": 165,
+        "h": 262
+      },
+      "score": 40,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 623,
+        "y": 691,
+        "w": 128,
+        "h": 249
+      },
+      "score": 50,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 466,
+        "y": 499,
+        "w": 116,
+        "h": 131
+      },
+      "score": 10,
+      "ethnicity": "adult Asian woman with fair skin.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

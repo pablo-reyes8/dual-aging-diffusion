@@ -1,0 +1,447 @@
+{
+  "image_id": "13118.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\13118.png",
+  "image_meta": {
+    "filename": "13118.png",
+    "stem": "13118",
+    "extension": ".png",
+    "file_size_bytes": 1281383,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:16:06Z"
+  },
+  "created_at": "2026-05-14T03:51:43Z",
+  "global": {
+    "label_id": 0,
+    "score": 10,
+    "ethnicity": "A portrait of a young blonde American woman."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 280,
+            "y": 148,
+            "w": 494,
+            "h": 237
+          },
+          "score": 3,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 444,
+            "y": 354,
+            "w": 129,
+            "h": 141
+          },
+          "score": 0,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 218,
+            "y": 405,
+            "w": 93,
+            "h": 180
+          },
+          "score": 0,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 734,
+            "y": 412,
+            "w": 91,
+            "h": 160
+          },
+          "score": 0,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 284,
+            "y": 502,
+            "w": 173,
+            "h": 115
+          },
+          "score": 10,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 573,
+            "y": 506,
+            "w": 185,
+            "h": 117
+          },
+          "score": 10,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 249,
+            "y": 617,
+            "w": 198,
+            "h": 125
+          },
+          "score": 10,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 590,
+            "y": 613,
+            "w": 215,
+            "h": 137
+          },
+          "score": 10,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 395,
+            "y": 667,
+            "w": 296,
+            "h": 75
+          },
+          "score": 5,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 243,
+            "y": 667,
+            "w": 174,
+            "h": 257
+          },
+          "score": 5,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 620,
+            "y": 687,
+            "w": 171,
+            "h": 233
+          },
+          "score": 0,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 481,
+            "y": 481,
+            "w": 88,
+            "h": 118
+          },
+          "score": 0,
+          "ethnicity": "young blonde American woman.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 280,
+        "y": 148,
+        "w": 494,
+        "h": 237
+      },
+      "score": 3,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 444,
+        "y": 354,
+        "w": 129,
+        "h": 141
+      },
+      "score": 0,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 218,
+        "y": 405,
+        "w": 93,
+        "h": 180
+      },
+      "score": 0,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 734,
+        "y": 412,
+        "w": 91,
+        "h": 160
+      },
+      "score": 0,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 284,
+        "y": 502,
+        "w": 173,
+        "h": 115
+      },
+      "score": 10,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 573,
+        "y": 506,
+        "w": 185,
+        "h": 117
+      },
+      "score": 10,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 249,
+        "y": 617,
+        "w": 198,
+        "h": 125
+      },
+      "score": 10,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 590,
+        "y": 613,
+        "w": 215,
+        "h": 137
+      },
+      "score": 10,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 395,
+        "y": 667,
+        "w": 296,
+        "h": 75
+      },
+      "score": 5,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 243,
+        "y": 667,
+        "w": 174,
+        "h": 257
+      },
+      "score": 5,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 620,
+        "y": 687,
+        "w": 171,
+        "h": 233
+      },
+      "score": 0,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 481,
+        "y": 481,
+        "w": 88,
+        "h": 118
+      },
+      "score": 0,
+      "ethnicity": "young blonde American woman.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}

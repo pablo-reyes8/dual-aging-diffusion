@@ -1,0 +1,447 @@
+{
+  "image_id": "08330.png",
+  "image_path": "C:\\Users\\alejo\\OneDrive\\Escritorio\\Pablo\\Profesional\\Semillero\\difussion-agging\\subset_50\\08330.png",
+  "image_meta": {
+    "filename": "08330.png",
+    "stem": "08330",
+    "extension": ".png",
+    "file_size_bytes": 1457227,
+    "width_px": 1024,
+    "height_px": 1024,
+    "modified_at": "2026-05-14T01:08:13Z"
+  },
+  "created_at": "2026-05-14T04:40:33Z",
+  "global": {
+    "label_id": 0,
+    "score": 60,
+    "ethnicity": "A portrait of an older European white man with visible facial aging."
+  },
+  "regions": {
+    "frente": {
+      "label_id": 1,
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 296,
+            "y": 252,
+            "w": 449,
+            "h": 170
+          },
+          "score": 67,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "glabela_entrecejo": {
+      "label_id": 2,
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 437,
+            "y": 387,
+            "w": 140,
+            "h": 122
+          },
+          "score": 80,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "patas_de_gallo": {
+      "label_id": 3,
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 721,
+            "y": 437,
+            "w": 110,
+            "h": 176
+          },
+          "score": 70,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 242,
+            "y": 438,
+            "w": 96,
+            "h": 161
+          },
+          "score": 80,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "bajo_ojo_ojeras": {
+      "label_id": 4,
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 299,
+            "y": 501,
+            "w": 142,
+            "h": 130
+          },
+          "score": 80,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 567,
+            "y": 496,
+            "w": 178,
+            "h": 151
+          },
+          "score": 89,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "surcos_nasogenianos": {
+      "label_id": 5,
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 270,
+            "y": 610,
+            "w": 140,
+            "h": 141
+          },
+          "score": 70,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 585,
+            "y": 617,
+            "w": 237,
+            "h": 125
+          },
+          "score": 78,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "labio_superior": {
+      "label_id": 6,
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 354,
+            "y": 677,
+            "w": 344,
+            "h": 67
+          },
+          "score": 60,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "comisuras_lineas_marioneta": {
+      "label_id": 7,
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "expected_boxes": 2,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 643,
+            "y": 693,
+            "w": 202,
+            "h": 230
+          },
+          "score": 62,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        },
+        {
+          "box_index": 2,
+          "bbox": {
+            "x": 269,
+            "y": 698,
+            "w": 138,
+            "h": 262
+          },
+          "score": 66,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    },
+    "puente_nasal": {
+      "label_id": 8,
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "expected_boxes": 1,
+      "slots": [
+        {
+          "box_index": 1,
+          "bbox": {
+            "x": 448,
+            "y": 503,
+            "w": 110,
+            "h": 116
+          },
+          "score": 70,
+          "ethnicity": "older European white man with visible facial aging.",
+          "omitted": false,
+          "slot_status": "Annotated"
+        }
+      ]
+    }
+  },
+  "all_slots": [
+    {
+      "label_id": 1,
+      "region_key": "frente",
+      "region_name": "Frente",
+      "region_alias": "Frente",
+      "box_index": 1,
+      "bbox": {
+        "x": 296,
+        "y": 252,
+        "w": 449,
+        "h": 170
+      },
+      "score": 67,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 2,
+      "region_key": "glabela_entrecejo",
+      "region_name": "Glabela / Entrecejo",
+      "region_alias": "Entrecejo",
+      "box_index": 1,
+      "bbox": {
+        "x": 437,
+        "y": 387,
+        "w": 140,
+        "h": 122
+      },
+      "score": 80,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 1,
+      "bbox": {
+        "x": 721,
+        "y": 437,
+        "w": 110,
+        "h": 176
+      },
+      "score": 70,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 3,
+      "region_key": "patas_de_gallo",
+      "region_name": "Patas de gallo",
+      "region_alias": "Patas de gallo",
+      "box_index": 2,
+      "bbox": {
+        "x": 242,
+        "y": 438,
+        "w": 96,
+        "h": 161
+      },
+      "score": 80,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 1,
+      "bbox": {
+        "x": 299,
+        "y": 501,
+        "w": 142,
+        "h": 130
+      },
+      "score": 80,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 4,
+      "region_key": "bajo_ojo_ojeras",
+      "region_name": "Bajo ojo / Ojeras",
+      "region_alias": "Ojeras",
+      "box_index": 2,
+      "bbox": {
+        "x": 567,
+        "y": 496,
+        "w": 178,
+        "h": 151
+      },
+      "score": 89,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 1,
+      "bbox": {
+        "x": 270,
+        "y": 610,
+        "w": 140,
+        "h": 141
+      },
+      "score": 70,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 5,
+      "region_key": "surcos_nasogenianos",
+      "region_name": "Surcos Nasogenianos",
+      "region_alias": "Surcos nasogenianos",
+      "box_index": 2,
+      "bbox": {
+        "x": 585,
+        "y": 617,
+        "w": 237,
+        "h": 125
+      },
+      "score": 78,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 6,
+      "region_key": "labio_superior",
+      "region_name": "Labio superior",
+      "region_alias": "Labio superior",
+      "box_index": 1,
+      "bbox": {
+        "x": 354,
+        "y": 677,
+        "w": 344,
+        "h": 67
+      },
+      "score": 60,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 1,
+      "bbox": {
+        "x": 643,
+        "y": 693,
+        "w": 202,
+        "h": 230
+      },
+      "score": 62,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 7,
+      "region_key": "comisuras_lineas_marioneta",
+      "region_name": "Comisuras / lineas de marioneta",
+      "region_alias": "Lineas marioneta",
+      "box_index": 2,
+      "bbox": {
+        "x": 269,
+        "y": 698,
+        "w": 138,
+        "h": 262
+      },
+      "score": 66,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    },
+    {
+      "label_id": 8,
+      "region_key": "puente_nasal",
+      "region_name": "Puente Nasal",
+      "region_alias": "Puente nasal",
+      "box_index": 1,
+      "bbox": {
+        "x": 448,
+        "y": 503,
+        "w": 110,
+        "h": 116
+      },
+      "score": 70,
+      "ethnicity": "older European white man with visible facial aging.",
+      "omitted": false,
+      "slot_status": "Annotated"
+    }
+  ]
+}
