@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets\header_image.png" width="1000"/>
+</p>
+
 # Diffusion Aging
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
