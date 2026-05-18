@@ -1,0 +1,10 @@
+# Global data audit config.
+#
+# The global branch keeps Colab/Drive paths by design. Use this config when
+# running in an environment where /content/drive/MyDrive is mounted.
+
+branch: global
+batch_size: 4
+num_workers: 2
+n_batches: 20
+audit: true

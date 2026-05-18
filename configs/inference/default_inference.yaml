@@ -1,0 +1,43 @@
+# High-level inference config for scripts/inference_cli.py.
+# Adapter checkpoint paths can be passed here or via CLI flags.
+
+device:
+  device: auto
+  torch_dtype: auto
+
+models:
+  global_model_id: SG161222/Realistic_Vision_V6.0_B1_noVAE
+  global_vae_id: stabilityai/sd-vae-ft-mse
+  local_model_id: runwayml/stable-diffusion-v1-5
+  local_vae_id:
+
+checkpoints:
+  global:
+  local:
+  strict_adapter: true
+
+# Optional. If omitted, the CLI tries to read adapter_config from each
+# inference checkpoint metadata.
+adapters:
+  global:
+  local:
+
+generation:
+  global_strength: 0.30
+  global_guidance_scale: 5.0
+  global_num_inference_steps: 35
+  local_strength: 0.20
+  local_guidance_scale: 0.8
+  local_num_inference_steps: 40
+  negative_prompt: ""
+  seed: 123
+
+fusion:
+  residual_alpha: 0.35
+  residual_sigma: 9.0
+  use_face_mask: true
+  face_mask_blur_sigma: 3.0
+  local_insert_alpha: 1.0
+  local_mask_blur_sigma: 5.0
+  color_match: true
+  color_match_strength: 0.75

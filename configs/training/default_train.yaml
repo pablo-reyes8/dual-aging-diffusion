@@ -1,0 +1,125 @@
+# High-level training configuration for scripts/train_cli.py.
+# Values are intentionally explicit so experiment runs can be audited.
+
+run:
+  name: face_aging_global_local
+  checkpoint_root: training_checkpoints
+
+device:
+  device: auto
+  amp_enabled: true
+  amp_dtype: bf16
+
+data:
+  batch_size: 4
+  num_workers: 0
+  pin_memory: false
+
+models:
+  global_model_id: SG161222/Realistic_Vision_V6.0_B1_noVAE
+  global_vae_id: stabilityai/sd-vae-ft-mse
+  local_model_id: runwayml/stable-diffusion-v1-5
+  local_vae_id:
+  torch_dtype: auto
+
+adapters:
+  global:
+    adapter_type: lora
+    rank: 8
+    alpha: 8
+    dropout: 0.0
+    target_suffixes: [to_q, to_k, to_v, to_out.0]
+  local:
+    adapter_type: dora
+    rank: 16
+    alpha: 16
+    dropout: 0.05
+    target_suffixes: [to_q, to_k, to_v, to_out.0]
+  optimizer:
+    lr: 0.0001
+    betas: [0.9, 0.999]
+    weight_decay: 0.01
+
+score_net:
+  checkpoint_path:
+  base_channels: 32
+  dropout: 0.15
+  strict: true
+  freeze: true
+
+losses:
+  local:
+    lambda_full: 1.0
+    lambda_zone: 0.25
+    lambda_score: 0.05
+    lambda_cycle: 0.0
+  global:
+    use_aux_bundle: true
+    aux:
+      use_age: true
+      age_model_id: nateraw/vit-age-classifier
+      age_image_size: 224
+      use_identity: true
+      identity_pretrained: vggface2
+      identity_image_size: 160
+      use_lpips: false
+    lambda_diff: 1.0
+    lambda_id: 0.5
+    lambda_age: 0.25
+    lambda_delta_age: 0.25
+    lambda_perc: 0.0
+
+training:
+  num_epochs: 5
+  local_num_epochs:
+  global_num_epochs:
+  train_order: [local, global]
+  train_local: true
+  train_global: true
+  local_grad_accum_steps: 4
+  global_grad_accum_steps: 4
+  local_grad_clip: 1.0
+  global_grad_clip: 1.0
+  local_p_full: 0.50
+  local_p_score: 0.35
+  local_p_zone: 0.15
+  local_enable_full: true
+  local_enable_score: true
+  local_enable_zone: true
+  local_p_neutral: 0.10
+  local_p_double_full: 0.15
+  global_p_diff: 0.55
+  global_p_semantic: 0.45
+  global_enable_diff: true
+  global_enable_semantic: true
+  global_semantic_components: [age, delta_age, id]
+  global_p_neutral: 0.10
+  global_p_double_diff: 0.05
+  min_target_age: 18
+  max_target_age: 90
+  build_schedulers_if_missing: true
+  local_warmup_ratio: 0.05
+  global_warmup_ratio: 0.05
+  local_min_lr: 0.000001
+  global_min_lr: 0.000001
+  min_warmup_steps: 10
+  max_warmup_steps:
+  save_latest: true
+  save_best: true
+  save_inference_copy: true
+  local_monitor_key: loss/total
+  global_monitor_key: loss/total
+  enable_gradient_checkpointing_flag: true
+  offload_after_each_branch: true
+  print_memory: true
+  local_max_batches:
+  global_max_batches:
+  inner_print_every: 10
+  inner_verbose: false
+  print_first_batch: false
+  verbose: true
+
+sampling:
+  enabled: false
+  sample_every_epochs: 0
+  sampling_output_dir:

@@ -1,0 +1,11 @@
+{
+  "crops": [
+    {
+      "zone_name": "forehead",
+      "bbox": [120, 80, 300, 220],
+      "prompt": "a tightly cropped, centered close-up of the forehead region, showing facial skin texture and local aging details, with an aging score of 85%, for a person",
+      "crop_path": null,
+      "mask_path": null
+    }
+  ]
+}

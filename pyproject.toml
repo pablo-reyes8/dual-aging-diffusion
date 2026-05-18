@@ -17,6 +17,7 @@ dependencies = [
   "pandas>=2.0",
   "pillow>=10.0",
   "matplotlib>=3.7",
+  "PyYAML>=6.0",
   "torch>=2.2",
   "torchvision>=0.17",
 ]

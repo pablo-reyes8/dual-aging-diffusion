@@ -1,0 +1,10 @@
+# Local data preparation and audit config.
+#
+# This config does not download remote datasets. It prepares/extracts the
+# local ZIP assets already stored under data/data_subset and data/results_labeling.
+
+branch: local
+batch_size: 8
+num_workers: 0
+n_batches: 20
+audit: true
