@@ -9,6 +9,8 @@ __pycache__/
 .venv/
 venv/
 env/
+*.env
+.env*
 
 # Testing / tooling
 .coverage
@@ -31,6 +33,21 @@ outputs/
 training_checkpoints/
 change_logs/
 artifacts/
+checkpoints/
+runs/
+wandb/
+mlruns/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# Model and dataset caches
+.cache/
+hf_cache/
+models/**/*.pt
+models/**/*.pth
+models/**/*.safetensors
 
 # Ablation outputs
 scripts/ablations/ab_*/
