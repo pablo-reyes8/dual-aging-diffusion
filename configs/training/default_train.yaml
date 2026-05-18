@@ -14,6 +14,8 @@ data:
   batch_size: 4
   num_workers: 0
   pin_memory: false
+  fused_batch_size: 1
+  fused_max_crops_per_image:
 
 models:
   global_model_id: SG161222/Realistic_Vision_V6.0_B1_noVAE
@@ -88,6 +90,11 @@ training:
   local_enable_zone: true
   local_p_neutral: 0.10
   local_p_double_full: 0.15
+  use_fused_loss: false
+  fused_loss_epoch: 15
+  fused_loss_every_n_steps: 1
+  lambda_fuse_score: 0.03
+  lambda_fuse_seam: 0.01
   global_p_diff: 0.55
   global_p_semantic: 0.45
   global_enable_diff: true

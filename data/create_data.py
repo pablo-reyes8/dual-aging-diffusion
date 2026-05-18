@@ -8,7 +8,7 @@ Examples:
 """
 
 import argparse
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from torch.utils.data import DataLoader
 
@@ -23,6 +23,7 @@ from data.local_path_dataset import (
     prepare_local_assets,
     split_samples_by_image_id,
 )
+from data.local_fused_dataset import LocalAlignedFusedDataset, local_fused_collate_fn
 from data.global_path_datasets import (
     DRIVE_ZIPS,
     GLOBAL_CSV_PATH,
@@ -107,6 +108,63 @@ def build_local_dataloaders(
         shuffle=False,
         num_workers=num_workers,
         collate_fn=local_collate_fn,
+        pin_memory=pin_memory,
+        drop_last=False,
+    )
+
+    return {
+        "json_dir": json_dir,
+        "image_dir": image_dir,
+        "image_index": image_index,
+        "samples": local_samples,
+        "train_samples": train_samples,
+        "val_samples": val_samples,
+        "train_dataset": train_dataset,
+        "val_dataset": val_dataset,
+        "train_loader": train_loader,
+        "val_loader": val_loader,
+    }
+
+
+def build_local_fused_dataloaders(
+    batch_size: int = 1,
+    num_workers: int = 0,
+    pin_memory: bool = True,
+    max_crops_per_image: Optional[int] = None,
+) -> Dict[str, Any]:
+    json_dir, image_dir, image_index = prepare_local_assets()
+    local_samples = build_local_samples(json_dir, image_index)
+
+    train_samples, val_samples = split_samples_by_image_id(
+        local_samples,
+        val_fraction=0.15,
+        seed=42,
+    )
+
+    train_dataset = LocalAlignedFusedDataset(
+        samples=train_samples,
+        max_crops_per_image=max_crops_per_image,
+    )
+    val_dataset = LocalAlignedFusedDataset(
+        samples=val_samples,
+        max_crops_per_image=max_crops_per_image,
+    )
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        collate_fn=local_fused_collate_fn,
+        pin_memory=pin_memory,
+        drop_last=False,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        collate_fn=local_fused_collate_fn,
         pin_memory=pin_memory,
         drop_last=False,
     )

@@ -12,7 +12,13 @@ from scripts.common import deep_update, load_config, print_config_summary
 DEFAULT_CONFIG: Dict[str, Any] = {
     "run": {"name": "face_aging_global_local", "checkpoint_root": "training_checkpoints"},
     "device": {"device": "auto", "amp_enabled": True, "amp_dtype": "bf16"},
-    "data": {"batch_size": 4, "num_workers": 0, "pin_memory": False},
+    "data": {
+        "batch_size": 4,
+        "num_workers": 0,
+        "pin_memory": False,
+        "fused_batch_size": 1,
+        "fused_max_crops_per_image": None,
+    },
     "models": {
         "global_model_id": "SG161222/Realistic_Vision_V6.0_B1_noVAE",
         "global_vae_id": "stabilityai/sd-vae-ft-mse",
@@ -75,6 +81,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "inner_print_every": 10,
         "inner_verbose": False,
         "print_first_batch": False,
+        "use_fused_loss": False,
+        "fused_loss_epoch": 15,
+        "fused_loss_every_n_steps": 1,
+        "lambda_fuse_score": 0.03,
+        "lambda_fuse_seam": 0.01,
     },
     "sampling": {
         "enabled": False,
@@ -120,20 +131,33 @@ def resolve_device_and_dtype(config: Dict[str, Any]):
 
 
 def build_data(config: Dict[str, Any]):
-    from data.create_data import build_global_dataloaders, build_local_dataloaders
+    from data.create_data import (
+        build_global_dataloaders,
+        build_local_dataloaders,
+        build_local_fused_dataloaders,
+    )
 
     data_cfg = config["data"]
+    train_cfg = config["training"]
     local_objects = build_local_dataloaders(
         batch_size=int(data_cfg["batch_size"]),
         num_workers=int(data_cfg["num_workers"]),
         pin_memory=bool(data_cfg["pin_memory"]),
     )
+    local_fused_objects = None
+    if bool(train_cfg.get("use_fused_loss", False)):
+        local_fused_objects = build_local_fused_dataloaders(
+            batch_size=int(data_cfg.get("fused_batch_size", 1)),
+            num_workers=int(data_cfg["num_workers"]),
+            pin_memory=bool(data_cfg["pin_memory"]),
+            max_crops_per_image=data_cfg.get("fused_max_crops_per_image"),
+        )
     global_objects = build_global_dataloaders(
         batch_size=min(int(data_cfg["batch_size"]), 4),
         num_workers=int(data_cfg["num_workers"]),
         pin_memory=bool(data_cfg["pin_memory"]),
     )
-    return local_objects, global_objects
+    return local_objects, global_objects, local_fused_objects
 
 
 def build_model_bundles(config: Dict[str, Any], device: torch.device, dtype: torch.dtype):
@@ -242,7 +266,7 @@ def main() -> None:
         return
 
     device, dtype = resolve_device_and_dtype(config)
-    local_objects, global_objects = build_data(config)
+    local_objects, global_objects, local_fused_objects = build_data(config)
     mixed_global_bundle, mixed_local_bundle = build_model_bundles(config, device, dtype)
     local_loss, global_loss = build_losses(config, mixed_global_bundle, mixed_local_bundle, device)
 
@@ -256,6 +280,9 @@ def main() -> None:
         mixed_global_bundle=mixed_global_bundle,
         local_train_loader=local_objects["train_loader"],
         global_train_loader=global_objects["train_loader"],
+        local_fused_train_loader=(
+            None if local_fused_objects is None else local_fused_objects["train_loader"]
+        ),
         local_loss_fn=local_loss,
         global_loss_fn=global_loss,
         device=device,

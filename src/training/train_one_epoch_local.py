@@ -241,6 +241,87 @@ def call_local_loss_fn(
 
     return loss_out
 
+
+def _flatten_nested_prompts(prompts: List[List[str]], valid_mask: torch.Tensor) -> List[str]:
+    out: List[str] = []
+    valid_cpu = valid_mask.detach().cpu()
+    for b, per_image in enumerate(prompts):
+        for k, prompt in enumerate(per_image):
+            if k < valid_cpu.shape[1] and bool(valid_cpu[b, k].item()):
+                out.append(prompt)
+    return out
+
+
+def generate_local_aged_crops_for_fused_loss(
+    local_loss_fn,
+    fused_batch: Dict[str, Any],
+    device: torch.device,
+) -> torch.Tensor:
+    """
+    Generates target-conditioned local crops with gradients to the local UNet.
+    """
+    pixel_values = fused_batch["pixel_values"].to(device)
+    valid_mask = fused_batch["valid_mask"].to(device=device, dtype=torch.bool)
+    B, K = valid_mask.shape
+
+    flat_pixels = pixel_values[valid_mask]
+    target_prompts = _flatten_nested_prompts(fused_batch["prompt"], valid_mask)
+    if flat_pixels.shape[0] == 0:
+        raise ValueError("Fused batch has no valid local crops.")
+
+    z0 = local_loss_fn.encode_images_to_latents(flat_pixels)
+    noise = torch.randn_like(z0)
+
+    t_min = int(getattr(local_loss_fn, "score_timestep_min", 20))
+    t_max = int(getattr(local_loss_fn, "score_timestep_max", 400))
+    timesteps = torch.randint(
+        low=t_min,
+        high=t_max + 1,
+        size=(z0.shape[0],),
+        device=device,
+    ).long()
+
+    zt = local_loss_fn.add_noise(z0, noise, timesteps)
+    target_hidden = local_loss_fn.encode_prompts(target_prompts)
+    noise_pred = local_loss_fn.predict_noise(
+        noisy_latents=zt,
+        timesteps=timesteps,
+        encoder_hidden_states=target_hidden,
+    )
+    x0_hat = local_loss_fn.predict_x0_from_noise(
+        noisy_latents=zt,
+        timesteps=timesteps,
+        noise_pred=noise_pred,
+    )
+    aged_flat = local_loss_fn.decode_latents_to_images(x0_hat)
+
+    aged_crops = torch.zeros(
+        B,
+        K,
+        aged_flat.shape[1],
+        aged_flat.shape[2],
+        aged_flat.shape[3],
+        device=device,
+        dtype=aged_flat.dtype,
+    )
+    aged_crops[valid_mask] = aged_flat
+    return aged_crops
+
+
+def should_run_fused_loss(
+    use_fused_loss: bool,
+    epoch: int,
+    fused_loss_epoch: int,
+    fused_loss_every_n_steps: int,
+    global_step: int,
+) -> bool:
+    if not use_fused_loss:
+        return False
+    if int(epoch) < int(fused_loss_epoch):
+        return False
+    every = max(1, int(fused_loss_every_n_steps))
+    return int(global_step) % every == 0
+
 # ============================================================
 # Main train-one-epoch function
 # ============================================================
@@ -283,6 +364,14 @@ def train_one_epoch_local(
     max_batches: Optional[int] = None,
     start_global_step: int = 0,
     start_optimizer_step: int = 0,
+
+    # Optional aligned fused local loss.
+    fused_train_loader=None,
+    local_fused_loss_fn=None,
+    use_fused_loss: bool = False,
+    fused_loss_epoch: int = 15,
+    fused_loss_every_n_steps: int = 1,
+    fused_global_forward_fn=None,
 
     # Logging.
     print_every: int = 50,
@@ -390,6 +479,10 @@ def train_one_epoch_local(
         print("p_double_full:         ", p_double_full)
         print("Approx DP frequency:   ", mode_probs["full"] * p_double_full)
         print("Mode probs:            ", mode_probs)
+        print("Fused loss enabled:    ", bool(use_fused_loss))
+        if use_fused_loss:
+            print("Fused loss epoch:      ", fused_loss_epoch)
+            print("Fused every n steps:   ", fused_loss_every_n_steps)
         print("Trainable tensors:     ", len(trainable_params))
         print("Trainable params:      ", sum(p.numel() for p in trainable_params))
 
@@ -407,6 +500,15 @@ def train_one_epoch_local(
     n_optimizer_steps_epoch = 0
     skipped_steps = 0
     double_prompt_steps = 0
+    fused_loss_steps = 0
+
+    fused_iter = None
+    if use_fused_loss:
+        if fused_train_loader is None:
+            raise ValueError("use_fused_loss=True requires fused_train_loader.")
+        if local_fused_loss_fn is None:
+            raise ValueError("use_fused_loss=True requires local_fused_loss_fn.")
+        fused_iter = iter(fused_train_loader)
 
     optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
@@ -641,6 +743,93 @@ def train_one_epoch_local(
             loss_out["double_prompt/used"] = torch.tensor(0.0)
 
         # --------------------------------------------------------
+        # Optional aligned fused loss.
+        #
+        # The base local loss has already been backpropagated above. This
+        # keeps the base crop graph and fused graph from being alive together.
+        # --------------------------------------------------------
+        fused_out = None
+        run_fused = should_run_fused_loss(
+            use_fused_loss=use_fused_loss,
+            epoch=epoch,
+            fused_loss_epoch=fused_loss_epoch,
+            fused_loss_every_n_steps=fused_loss_every_n_steps,
+            global_step=global_step,
+        )
+
+        if run_fused:
+            try:
+                fused_batch = next(fused_iter)
+            except StopIteration:
+                fused_iter = iter(fused_train_loader)
+                fused_batch = next(fused_iter)
+
+            fused_batch = move_batch_to_device(fused_batch, device)
+
+            with torch.no_grad():
+                if fused_global_forward_fn is not None:
+                    x_global = fused_global_forward_fn(fused_batch=fused_batch, device=device)
+                else:
+                    x_global = fused_batch["full_pixel_values"]
+                x_global = x_global.detach()
+
+            with autocast_ctx(
+                device=device,
+                enabled=amp_enabled,
+                amp_dtype=amp_dtype,
+                cache_enabled=True,
+            ):
+                aged_crops = generate_local_aged_crops_for_fused_loss(
+                    local_loss_fn=local_loss_fn,
+                    fused_batch=fused_batch,
+                    device=device,
+                )
+                fused_out = local_fused_loss_fn(
+                    x_orig=fused_batch["full_pixel_values"],
+                    x_global=x_global,
+                    aged_crops=aged_crops,
+                    boxes=fused_batch["boxes"],
+                    masks=fused_batch["masks"],
+                    target_scores=fused_batch["target_scores"],
+                    valid_mask=fused_batch["valid_mask"],
+                )
+                raw_fused_loss = fused_out["loss"]
+                fused_loss = raw_fused_loss / float(grad_accum_steps)
+
+            if skip_nonfinite_loss and not torch.isfinite(raw_fused_loss.detach()).all():
+                skipped_steps += 1
+                optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
+
+                if verbose:
+                    print(
+                        f"[WARN] Non-finite fused local loss at batch_idx={batch_idx}. "
+                        "Skipping accumulated gradients."
+                    )
+
+                continue
+
+            backward_with_optional_scaler(
+                loss=fused_loss,
+                optimizer=optimizer,
+                scaler=scaler,
+                retain_graph=False,
+            )
+
+            fused_loss_steps += 1
+            loss_out["loss"] = loss_out["loss"].detach() + raw_fused_loss.detach()
+            loss_out["loss_fuse_score"] = fused_out["loss_fuse_score"]
+            loss_out["loss_fuse_seam"] = fused_out["loss_fuse_seam"]
+            if "fused_score_pred_mean" in fused_out:
+                loss_out["fused_score_pred_mean"] = fused_out["fused_score_pred_mean"]
+            if "fused_score_target_mean" in fused_out:
+                loss_out["fused_score_target_mean"] = fused_out["fused_score_target_mean"]
+            if "fused_score_mae" in fused_out:
+                loss_out["fused_score_mae"] = fused_out["fused_score_mae"]
+            loss_out["fused/used"] = torch.tensor(1.0)
+        else:
+            loss_out["fused/used"] = torch.tensor(0.0)
+
+        # --------------------------------------------------------
         # Counters.
         # Important:
         #   A double-prompt step still counts as one micro-step
@@ -662,6 +851,7 @@ def train_one_epoch_local(
         )
 
         batch_metrics["double_prompt/used"] = 1.0 if use_double_prompt else 0.0
+        batch_metrics["fused/used"] = 1.0 if run_fused else 0.0
 
         if use_double_prompt:
             batch_metrics["double_prompt/source_loss"] = float(
@@ -732,6 +922,7 @@ def train_one_epoch_local(
         print("Optimizer steps epoch:    ", n_optimizer_steps_epoch)
         print("Double-prompt microsteps: ", double_prompt_steps)
         print("Double-prompt fraction:   ", double_prompt_steps / max(1, n_micro_steps))
+        print("Fused-loss microsteps:    ", fused_loss_steps)
         print("Global step:              ", global_step)
         print("Optimizer step:           ", optimizer_step)
         print("Skipped nonfinite steps:  ", skipped_steps)
@@ -751,5 +942,6 @@ def train_one_epoch_local(
         "n_optimizer_steps_epoch": int(n_optimizer_steps_epoch),
         "double_prompt_steps": int(double_prompt_steps),
         "double_prompt_fraction": float(double_prompt_steps / max(1, n_micro_steps)),
+        "fused_loss_steps": int(fused_loss_steps),
         "skipped_steps": int(skipped_steps),
     }

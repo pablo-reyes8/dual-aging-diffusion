@@ -83,6 +83,41 @@ local_enable_zone: true
 
 This prevents every batch from carrying every local objective at the same time.
 
+## Optional Local Fused Loss
+
+The local branch can optionally add a deterministic fused loss after the base crop-level local loss. This is disabled by default and uses a second aligned dataloader grouped by image/person.
+
+The base local loader remains random and crop-level. The fused loader returns:
+
+```text
+full_pixel_values: [B, 3, 512, 512]
+pixel_values:      [B, K, 3, 256, 256]
+boxes:             [B, K, 4]
+masks:             [B, K, 1, 256, 256]
+target_scores:     [B, K]
+valid_mask:        [B, K]
+```
+
+The fused loss is active only when:
+
+```text
+use_fused_loss is true
+current epoch >= fused_loss_epoch
+global local-step counter satisfies fused_loss_every_n_steps
+```
+
+Default flags:
+
+```yaml
+use_fused_loss: false
+fused_loss_epoch: 15
+fused_loss_every_n_steps: 1
+lambda_fuse_score: 0.03
+lambda_fuse_seam: 0.01
+```
+
+The fused path runs after the base local backward pass, so the base crop graph and fused graph are not kept alive at the same time. ScoreNet remains frozen, but the ScoreNet forward is not wrapped in `torch.no_grad()` because gradients must flow through the fused crop input back to the local branch.
+
 ## Global Mode Sampling
 
 The global training loop samples between diffusion and semantic modes:
@@ -181,4 +216,3 @@ The tests are smoke tests. They validate imports, shapes, prompt utilities, chec
 ```bash
 pytest -q
 ```
-

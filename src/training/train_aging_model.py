@@ -84,6 +84,16 @@ def train_global_local_face_aging(
     local_p_neutral: float = 0.10,
     local_p_double_full: float = 0.15,
 
+    # Optional local deterministic fused loss.
+    local_fused_train_loader=None,
+    local_fused_loss_fn=None,
+    use_fused_loss: bool = False,
+    fused_loss_epoch: int = 15,
+    fused_loss_every_n_steps: int = 1,
+    lambda_fuse_score: float = 0.03,
+    lambda_fuse_seam: float = 0.01,
+    fused_global_forward_fn: Optional[Callable] = None,
+
     # Global loss mode config.
     global_p_diff: float = 0.55,
     global_p_semantic: float = 0.45,
@@ -343,6 +353,19 @@ def train_global_local_face_aging(
             name="global",
         )
 
+    if use_fused_loss:
+        if local_fused_train_loader is None:
+            raise ValueError("use_fused_loss=True requires local_fused_train_loader.")
+        if local_fused_loss_fn is None:
+            from src.loss.local_fused_loss import LocalFusedFusionLoss
+
+            score_net = getattr(local_loss_fn, "score_net", None)
+            local_fused_loss_fn = LocalFusedFusionLoss(
+                score_net=score_net,
+                lambda_fuse_score=lambda_fuse_score,
+                lambda_fuse_seam=lambda_fuse_seam,
+            )
+
     # ------------------------------------------------------------
     # Initial CPU offload.
     # ------------------------------------------------------------
@@ -449,6 +472,13 @@ def train_global_local_face_aging(
                     max_batches=local_max_batches,
                     start_global_step=local_global_step,
                     start_optimizer_step=local_optimizer_step,
+
+                    fused_train_loader=local_fused_train_loader,
+                    local_fused_loss_fn=local_fused_loss_fn,
+                    use_fused_loss=use_fused_loss,
+                    fused_loss_epoch=fused_loss_epoch,
+                    fused_loss_every_n_steps=fused_loss_every_n_steps,
+                    fused_global_forward_fn=fused_global_forward_fn,
 
                     print_every=inner_print_every,
                     print_first_batch=print_first_batch,

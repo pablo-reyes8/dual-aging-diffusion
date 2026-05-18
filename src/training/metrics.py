@@ -452,6 +452,11 @@ def compute_local_training_metrics(
     if loss_out is not None:
         metrics.update(extract_loss_metrics(loss_out))
         metrics.update(extract_prediction_metrics_from_loss_out(loss_out))
+        for key in ["fused_score_pred_mean", "fused_score_target_mean", "fused_score_mae"]:
+            if key in loss_out:
+                value = metric_to_float(loss_out[key], default=None)
+                if value is not None:
+                    metrics[f"fused/{key}"] = value
 
     if loss_mode is not None:
         metrics[f"loss_mode/{loss_mode}"] = 1.0
@@ -718,4 +723,3 @@ def print_global_metrics(
     step_text = f" step={step}" if step is not None else ""
     msg = format_metrics(metrics, keys=GLOBAL_PRINT_KEYS, precision=4)
     print(f"{prefix}{step_text} {msg}")
-
