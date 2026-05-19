@@ -14,6 +14,12 @@ The main fusion function is:
 src/inference/global_local_fusion.py::fuse_global_local_outputs
 ```
 
+For notebooks that already build `sampling_objects` with `build_single_person_sampling_loader`, use:
+
+```text
+src/inference/inference_wrapper.py::run_sampling_objects_inference
+```
+
 ## Inputs
 
 Inference expects:
@@ -121,6 +127,45 @@ The fusion function can accept a `fusion_bundle`. When no bundle is passed, infe
 
 The current CLI uses deterministic fusion by default. This keeps inference predictable and avoids requiring an additional model.
 
+The notebook wrapper can build and use the refiner by setting `config["refiner"]["enabled"] = True`.
+
+Example:
+
+```python
+from src.inference.inference_wrapper import run_sampling_objects_inference
+
+result = run_sampling_objects_inference(
+    sampling_objects=sampling_objects,
+    mixed_global_bundle=mixed_global_bundle,
+    mixed_local_bundle=mixed_local_bundle,
+    checkpoint_paths={
+        "global": "training_checkpoints/run/global/best/best_adapter_inference.pt",
+        "local": "training_checkpoints/run/local/best/best_adapter_inference.pt",
+    },
+    config={
+        "generation": {
+            "global_strength": 0.30,
+            "global_guidance_scale": 5.0,
+            "global_num_inference_steps": 35,
+            "local_strength": 0.20,
+            "local_guidance_scale": 0.8,
+            "local_num_inference_steps": 40,
+            "local_recycle_passes": 2,
+            "seed": 77,
+        },
+        "refiner": {
+            "enabled": True,
+            "strength": 0.055,
+            "guidance_scale": 1.5,
+            "num_inference_steps": 12,
+        },
+    },
+    output_dir="outputs/inference/09501",
+)
+```
+
+If the bundles already have adapters injected, the wrapper only restores weights. If they are plain base bundles, it injects the adapter architecture from checkpoint metadata before restoring weights.
+
 ## Running Inference
 
 Dry-run:
@@ -148,4 +193,3 @@ python -m scripts.inference_cli \
 ```
 
 The CLI writes intermediate and final outputs into the selected output directory.
-
