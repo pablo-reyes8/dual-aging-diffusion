@@ -207,3 +207,102 @@ def test_single_person_sampling_dataset_accepts_region_score_overrides(tmp_path)
 
     assert "85%" in prompts["frente"]
     assert "100%" in prompts["surcos_nasogenianos"]
+
+
+def test_single_person_sampling_dataset_keeps_all_boxes_per_region(tmp_path):
+    image_dir = tmp_path / "images"
+    _write_image(image_dir / "09501.png", size=(128, 128))
+    samples = [
+        {
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": "bajo_ojo_ojeras",
+            "box_index": 1,
+            "bbox": {"x": 20, "y": 32, "w": 24, "h": 24},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        },
+        {
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": "bajo_ojo_ojeras",
+            "box_index": 2,
+            "bbox": {"x": 80, "y": 32, "w": 24, "h": 24},
+            "score_raw": 26.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        },
+        {
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": "surcos_nasogenianos",
+            "box_index": 1,
+            "bbox": {"x": 20, "y": 70, "w": 24, "h": 24},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        },
+        {
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": "surcos_nasogenianos",
+            "box_index": 2,
+            "bbox": {"x": 80, "y": 70, "w": 24, "h": 24},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        },
+    ]
+
+    dataset = SinglePersonSamplingDataset(
+        samples=samples,
+        image_stem="09501",
+        local_target_score={"default": 55.0},
+        full_resolution=64,
+        local_resolution=32,
+        global_csv_path=tmp_path / "missing.csv",
+    )
+    zones = dataset[0]["zones"]
+
+    assert [zone["zone_name"] for zone in zones] == [
+        "bajo_ojo_ojeras",
+        "bajo_ojo_ojeras",
+        "surcos_nasogenianos",
+        "surcos_nasogenianos",
+    ]
+    assert len(zones) == 4
+
+
+def test_single_person_sampling_dataset_skips_only_requested_region(tmp_path):
+    image_dir = tmp_path / "images"
+    _write_image(image_dir / "09501.png", size=(128, 128))
+
+    samples = []
+    for region_key in [
+        "frente",
+        "labio_superior",
+        "comisuras_lineas_marioneta",
+        "puente_nasal",
+    ]:
+        samples.append({
+            "image_id": "09501.png",
+            "image_stem": "09501",
+            "image_path": str(image_dir / "09501.png"),
+            "region_key": region_key,
+            "bbox": {"x": 32, "y": 32, "w": 32, "h": 32},
+            "score_raw": 20.0,
+            "ethnicity_raw": "A portrait of a white person.",
+        })
+
+    dataset = SinglePersonSamplingDataset(
+        samples=samples,
+        image_stem="09501",
+        full_resolution=64,
+        local_resolution=32,
+        global_csv_path=tmp_path / "missing.csv",
+        skip=["labio_superior"],
+    )
+    zone_names = [zone["zone_name"] for zone in dataset[0]["zones"]]
+
+    assert zone_names == ["frente", "comisuras_lineas_marioneta", "puente_nasal"]

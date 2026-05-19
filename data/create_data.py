@@ -20,6 +20,7 @@ from data.local_path_dataset import (
     build_local_samples,
     local_collate_fn,
     make_local_score_sampler,
+    normalize_region_skip_list,
     prepare_local_assets,
     split_samples_by_image_id,
 )
@@ -36,9 +37,16 @@ def build_local_dataloaders(
     batch_size: int = 8,
     num_workers: int = 2,
     pin_memory: bool = True,
+    skip=None,
+    skip_regions=None,
+    drop_regions=None,
 ) -> Dict[str, Any]:
     json_dir, image_dir, image_index = prepare_local_assets()
     local_samples = build_local_samples(json_dir, image_index)
+    requested_skip_regions = skip_regions if skip_regions is not None else skip
+    skipped_regions = normalize_region_skip_list(
+        requested_skip_regions if requested_skip_regions is not None else drop_regions
+    )
 
     train_samples, val_samples = split_samples_by_image_id(
         local_samples,
@@ -55,7 +63,7 @@ def build_local_dataloaders(
         jitter_scores_enabled=True,
         enable_horizontal_flip=False,
         normalize_for_diffusion=True,
-        drop_regions=None,
+        drop_regions=skipped_regions,
     )
 
     val_dataset = LocalAgingCropDataset(
@@ -67,7 +75,7 @@ def build_local_dataloaders(
         jitter_scores_enabled=False,
         enable_horizontal_flip=False,
         normalize_for_diffusion=True,
-        drop_regions=None,
+        drop_regions=skipped_regions,
     )
 
     train_sampler = make_local_score_sampler(
@@ -111,6 +119,7 @@ def build_local_dataloaders(
         "json_dir": json_dir,
         "image_dir": image_dir,
         "image_index": image_index,
+        "skip_regions": skipped_regions,
         "samples": local_samples,
         "train_samples": train_samples,
         "val_samples": val_samples,
@@ -126,9 +135,14 @@ def build_local_fused_dataloaders(
     num_workers: int = 0,
     pin_memory: bool = True,
     max_crops_per_image: Optional[int] = None,
+    skip=None,
+    skip_regions=None,
 ) -> Dict[str, Any]:
     json_dir, image_dir, image_index = prepare_local_assets()
     local_samples = build_local_samples(json_dir, image_index)
+    skipped_regions = normalize_region_skip_list(
+        skip_regions if skip_regions is not None else skip
+    )
 
     train_samples, val_samples = split_samples_by_image_id(
         local_samples,
@@ -139,10 +153,12 @@ def build_local_fused_dataloaders(
     train_dataset = LocalAlignedFusedDataset(
         samples=train_samples,
         max_crops_per_image=max_crops_per_image,
+        skip_regions=skipped_regions,
     )
     val_dataset = LocalAlignedFusedDataset(
         samples=val_samples,
         max_crops_per_image=max_crops_per_image,
+        skip_regions=skipped_regions,
     )
 
     train_loader = DataLoader(
@@ -168,6 +184,7 @@ def build_local_fused_dataloaders(
         "json_dir": json_dir,
         "image_dir": image_dir,
         "image_index": image_index,
+        "skip_regions": skipped_regions,
         "samples": local_samples,
         "train_samples": train_samples,
         "val_samples": val_samples,
@@ -184,15 +201,21 @@ def build_single_person_sampling_loader(
     local_target_score: Union[float, Dict[str, float]] = 85.0,
     num_workers: int = 0,
     pin_memory: bool = False,
+    skip=None,
+    skip_regions=None,
 ) -> Dict[str, Any]:
     json_dir, image_dir, image_index = prepare_local_assets()
     local_samples = build_local_samples(json_dir, image_index)
+    skipped_regions = normalize_region_skip_list(
+        skip_regions if skip_regions is not None else skip
+    )
 
     dataset = SinglePersonSamplingDataset(
         samples=local_samples,
         image_stem=image_stem,
         target_age=target_age,
         local_target_score=local_target_score,
+        skip_regions=skipped_regions,
     )
 
     loader = DataLoader(
@@ -209,6 +232,7 @@ def build_single_person_sampling_loader(
         "json_dir": json_dir,
         "image_dir": image_dir,
         "image_index": image_index,
+        "skip_regions": skipped_regions,
         "samples": local_samples,
         "dataset": dataset,
         "loader": loader,
@@ -219,7 +243,18 @@ def build_global_dataloaders(
     batch_size: int = 4,
     num_workers: int = 2,
     pin_memory: bool = True,
+    skip=None,
+    skip_regions=None,
 ) -> Dict[str, Any]:
+    skipped_regions = normalize_region_skip_list(
+        skip_regions if skip_regions is not None else skip
+    )
+    if skipped_regions:
+        print(
+            "[INFO] skip_regions applies to local crop/fusion/sampling loaders. "
+            f"Global full-face loader has no zones, so it ignores: {skipped_regions}"
+        )
+
     global_image_index = global_data.prepare_global_assets(
         zip_paths=global_data.DRIVE_ZIPS,
         output_dir=global_data.GLOBAL_IMAGE_DIR,
@@ -271,6 +306,7 @@ def build_global_dataloaders(
     return {
         "image_dir": global_data.GLOBAL_IMAGE_DIR,
         "image_index": global_image_index,
+        "skip_regions": skipped_regions,
         "samples": global_samples,
         "train_dataset": global_train_dataset,
         "val_dataset": global_val_dataset,

@@ -8,3 +8,4 @@ batch_size: 8
 num_workers: 0
 n_batches: 20
 audit: true
+skip_regions: []

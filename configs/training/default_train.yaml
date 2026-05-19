@@ -14,6 +14,9 @@ data:
   batch_size: 4
   num_workers: 0
   pin_memory: false
+  # Excludes exact local anatomical zones everywhere local crops are built.
+  # Example: [labio_superior] excludes only labio_superior.
+  skip_regions: []
   fused_batch_size: 1
   fused_max_crops_per_image:
 
@@ -113,6 +116,7 @@ training:
   max_warmup_steps:
   save_latest: true
   save_best: true
+  save_epoch_checkpoints: true
   save_inference_copy: true
   local_monitor_key: loss/total
   global_monitor_key: loss/total
@@ -130,3 +134,26 @@ sampling:
   enabled: false
   sample_every_epochs: 0
   sampling_output_dir:
+  sample_global_strength: 0.30
+  sample_global_guidance_scale: 5.0
+  sample_global_num_inference_steps: 35
+  sample_global_negative_prompt:
+  sample_local_strength: 0.20
+  sample_local_guidance_scale: 0.8
+  sample_local_num_inference_steps: 40
+  sample_local_negative_prompt:
+  # 1 keeps the current single local img2img pass. Use 2 for local recycling before fusion.
+  sample_local_recycle_passes: 1
+  sample_local_recycle_strength:
+  sample_local_recycle_guidance_scale:
+  sample_local_recycle_num_inference_steps:
+  sample_residual_alpha: 0.35
+  sample_residual_sigma: 9.0
+  sample_use_face_mask: true
+  sample_face_mask_blur_sigma: 3.0
+  sample_local_insert_alpha: 1.0
+  sample_local_mask_blur_sigma: 5.0
+  sample_color_match: true
+  sample_color_match_strength: 0.75
+  sample_seed: 123
+  sample_save_grid: true

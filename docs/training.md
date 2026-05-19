@@ -170,6 +170,7 @@ The wrapper can save:
 ```yaml
 save_latest: true
 save_best: true
+save_epoch_checkpoints: true
 save_inference_copy: true
 local_monitor_key: loss/total
 global_monitor_key: loss/total
@@ -183,6 +184,24 @@ src/training/chekpoints.py
 
 The inference copy is the most important artifact for downstream inference because it stores adapter weights and metadata needed by the inference CLI.
 
+Checkpoint outputs are organized per branch:
+
+```text
+checkpoint_root/
+  local/
+    latest/
+    best/
+    epoch_001/
+    epoch_002/
+  global/
+    latest/
+    best/
+    epoch_001/
+    epoch_002/
+```
+
+`latest/` remains the resume-friendly checkpoint. `best/` tracks the monitor metric. `epoch_XXX/` stores immutable snapshots for every completed branch epoch when `save_epoch_checkpoints=true`.
+
 ## Memory Controls
 
 Recommended defaults:
@@ -194,6 +213,80 @@ print_memory: true
 ```
 
 These options exist because the project trains two diffusion branches but usually only one branch needs to be active on GPU at a time.
+
+## Non-Finite Loss Diagnostics
+
+The training loops check both losses and optimizer steps for non-finite values. These checks are always printed when triggered, even if inner verbose logging is disabled.
+
+For a non-finite local loss, the warning includes:
+
+```text
+branch=local
+batch_idx=...
+global_step=...
+loss_mode=full | zone | score
+pixel_values min/max/mean/nonfinite
+score and score_raw ranges
+target score ranges
+Components: loss_full/loss_zone/loss_score/noise_pred_...
+```
+
+For a non-finite global loss, the warning includes the same batch context plus the active global mode:
+
+```text
+loss_mode=diff | semantic
+Components: loss_diff/loss_age/loss_delta_age/loss_id/...
+```
+
+## Monitoring Sampling Local Recycling
+
+Monitoring fusion can optionally refine each local crop with more than one local img2img pass before deterministic fusion. This is inference-only sampling behavior; it does not change training gradients or the local loss.
+
+Default behavior is unchanged:
+
+```yaml
+sample_local_recycle_passes: 1
+```
+
+Use two passes to enable local recycling:
+
+```python
+result = train_global_local_face_aging(
+    ...,
+    sample_local_recycle_passes=2,
+    sample_local_recycle_strength=0.12,  # optional; defaults to sample_local_strength
+)
+```
+
+If `sample_local_recycle_strength`, `sample_local_recycle_guidance_scale`, or `sample_local_recycle_num_inference_steps` are omitted, the recycling pass reuses the normal local sampling values.
+
+The most important pattern to recognize is adapter corruption after an optimizer step:
+
+```text
+noise_pred_full: shape=(B, 4, H, W) nonfinite=all values
+noise_pred_zone: shape=(B, 4, H, W) nonfinite=all values
+noise_pred_target: shape=(B, 4, H, W) nonfinite=all values
+```
+
+If this appears across `full`, `zone`, and `score`, the issue is not the dataset, targets, prompts, or ScoreNet. It means the UNet forward itself is producing non-finite predictions. In this project the main known cause is training LoRA/DoRA adapter weights stored in `float16`.
+
+The code prevents this by keeping trainable adapter parameters in `float32` while allowing AMP for forward compute. See:
+
+```text
+docs/models_and_adapters.md#adapter-dtype-stability
+```
+
+If non-finite adapter updates occurred before this protection was active, restart the kernel/runtime, rebuild bundles from scratch, and do not resume from the contaminated checkpoint.
+
+Expected healthy local summary:
+
+```text
+micro ~= number of loader batches
+optim_epoch ~= ceil(micro / grad_accum_steps)
+skipped=0
+```
+
+Small stochastic variation in `loss/total` is normal because the loop samples different loss modes per batch.
 
 ## Running Training
 

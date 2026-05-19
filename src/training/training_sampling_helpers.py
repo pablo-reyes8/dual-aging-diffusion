@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
@@ -493,6 +494,10 @@ def default_sample_local_forward(
     guidance_scale: float,
     num_inference_steps: int,
     negative_prompt: Optional[str] = None,
+    recycle_passes: int = 1,
+    recycle_strength: Optional[float] = None,
+    recycle_guidance_scale: Optional[float] = None,
+    recycle_num_inference_steps: Optional[int] = None,
     generator: Optional[torch.Generator] = None,
 ) -> List[Dict[str, Any]]:
     """
@@ -521,21 +526,45 @@ def default_sample_local_forward(
         pipe.set_progress_bar_config(disable=True)
 
     local_outputs = []
+    recycle_passes = max(1, int(recycle_passes))
 
     for zone in zones:
         crop = zone["crop"]
         prompt = zone["prompt"]
+        zone_negative_prompt = zone.get("negative_prompt", negative_prompt)
+        zone_strength = float(zone.get("strength", strength))
+        zone_guidance_scale = float(zone.get("guidance_scale", guidance_scale))
+        zone_num_inference_steps = int(zone.get("num_inference_steps", num_inference_steps))
+
+        recycle_zone_strength = float(
+            zone.get(
+                "recycle_strength",
+                zone_strength if recycle_strength is None else recycle_strength,
+            )
+        )
+        recycle_zone_guidance_scale = float(
+            zone.get(
+                "recycle_guidance_scale",
+                zone_guidance_scale if recycle_guidance_scale is None else recycle_guidance_scale,
+            )
+        )
+        recycle_zone_num_inference_steps = int(
+            zone.get(
+                "recycle_num_inference_steps",
+                zone_num_inference_steps if recycle_num_inference_steps is None else recycle_num_inference_steps,
+            )
+        )
 
         if pipe is None:
             aged_crop = _img2img_tensor_bundle_safe(
                 bundle=mixed_local_bundle,
                 image=crop,
                 prompt=prompt,
-                negative_prompt=zone.get("negative_prompt", negative_prompt),
+                negative_prompt=zone_negative_prompt,
                 device=device,
-                strength=float(zone.get("strength", strength)),
-                guidance_scale=float(zone.get("guidance_scale", guidance_scale)),
-                num_inference_steps=int(zone.get("num_inference_steps", num_inference_steps)),
+                strength=zone_strength,
+                guidance_scale=zone_guidance_scale,
+                num_inference_steps=zone_num_inference_steps,
                 generator=generator,
             )
         else:
@@ -543,15 +572,41 @@ def default_sample_local_forward(
                 pipe=pipe,
                 image=crop,
                 prompt=prompt,
-                negative_prompt=zone.get("negative_prompt", negative_prompt),
-                strength=float(zone.get("strength", strength)),
-                guidance_scale=float(zone.get("guidance_scale", guidance_scale)),
-                num_inference_steps=int(zone.get("num_inference_steps", num_inference_steps)),
+                negative_prompt=zone_negative_prompt,
+                strength=zone_strength,
+                guidance_scale=zone_guidance_scale,
+                num_inference_steps=zone_num_inference_steps,
                 generator=generator,
             )
 
+        for _ in range(recycle_passes - 1):
+            if pipe is None:
+                aged_crop = _img2img_tensor_bundle_safe(
+                    bundle=mixed_local_bundle,
+                    image=aged_crop,
+                    prompt=prompt,
+                    negative_prompt=zone_negative_prompt,
+                    device=device,
+                    strength=recycle_zone_strength,
+                    guidance_scale=recycle_zone_guidance_scale,
+                    num_inference_steps=recycle_zone_num_inference_steps,
+                    generator=generator,
+                )
+            else:
+                aged_crop = _call_img2img_pipe_safe(
+                    pipe=pipe,
+                    image=aged_crop,
+                    prompt=prompt,
+                    negative_prompt=zone_negative_prompt,
+                    strength=recycle_zone_strength,
+                    guidance_scale=recycle_zone_guidance_scale,
+                    num_inference_steps=recycle_zone_num_inference_steps,
+                    generator=generator,
+                )
+
         local_outputs.append({
             "zone_name": zone.get("zone_name", None),
+            "box_index": zone.get("box_index", None),
             "aged_crop": aged_crop,
             "bbox": zone["bbox"],
             "mask": zone.get("mask", None),
@@ -559,6 +614,22 @@ def default_sample_local_forward(
         })
 
     return local_outputs
+
+
+def _call_sample_forward_with_supported_kwargs(fn: Callable, kwargs: Dict[str, Any]):
+    """
+    Calls custom sampling hooks without forcing new optional kwargs on older hooks.
+    """
+    signature = inspect.signature(fn)
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in signature.parameters.values()):
+        return fn(**kwargs)
+
+    filtered_kwargs = {
+        key: value
+        for key, value in kwargs.items()
+        if key in signature.parameters
+    }
+    return fn(**filtered_kwargs)
 
 
 # ============================================================
@@ -578,7 +649,7 @@ def save_monitoring_fusion_outputs(
 
     Requires fuse_global_local_outputs(..., return_pil=True).
     """
-    output_dir = Path(output_dir)
+    output_dir = Path(output_dir) / f"epoch_{int(epoch) + 1:03d}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     safe_id = str(sample_id).replace("/", "_").replace("\\", "_").replace(" ", "_")
@@ -668,6 +739,10 @@ def run_deterministic_training_reconstruction_sample(
     sample_local_guidance_scale: float = 0.8,
     sample_local_num_inference_steps: int = 40,
     sample_local_negative_prompt: Optional[str] = None,
+    sample_local_recycle_passes: int = 1,
+    sample_local_recycle_strength: Optional[float] = None,
+    sample_local_recycle_guidance_scale: Optional[float] = None,
+    sample_local_recycle_num_inference_steps: Optional[int] = None,
 
     # Deterministic fusion params.
     residual_alpha: float = 0.35,
@@ -717,6 +792,7 @@ def run_deterministic_training_reconstruction_sample(
         print("Sample id      :", sample_id)
         print("Global prompt  :", global_prompt)
         print("Local zones    :", len(local_zones))
+        print("Local recycling:", max(1, int(sample_local_recycle_passes)), "pass(es)")
         print("Fusion         : deterministic only")
         print("Refiner        : disabled")
 
@@ -745,15 +821,22 @@ def run_deterministic_training_reconstruction_sample(
         # --------------------------------------------------------
         move_bundle_modules_only_to_device(mixed_local_bundle, device, eval_mode=True)
 
-        local_outputs = sample_local_forward_fn(
-            mixed_local_bundle=mixed_local_bundle,
-            zones=local_zones,
-            device=device,
-            strength=sample_local_strength,
-            guidance_scale=sample_local_guidance_scale,
-            num_inference_steps=sample_local_num_inference_steps,
-            negative_prompt=sample_local_negative_prompt,
-            generator=generator,
+        local_outputs = _call_sample_forward_with_supported_kwargs(
+            sample_local_forward_fn,
+            {
+                "mixed_local_bundle": mixed_local_bundle,
+                "zones": local_zones,
+                "device": device,
+                "strength": sample_local_strength,
+                "guidance_scale": sample_local_guidance_scale,
+                "num_inference_steps": sample_local_num_inference_steps,
+                "negative_prompt": sample_local_negative_prompt,
+                "recycle_passes": sample_local_recycle_passes,
+                "recycle_strength": sample_local_recycle_strength,
+                "recycle_guidance_scale": sample_local_recycle_guidance_scale,
+                "recycle_num_inference_steps": sample_local_recycle_num_inference_steps,
+                "generator": generator,
+            },
         )
 
         offload_bundle_modules_only(mixed_local_bundle, label="local sampling")

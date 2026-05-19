@@ -139,10 +139,12 @@ def build_data(config: Dict[str, Any]):
 
     data_cfg = config["data"]
     train_cfg = config["training"]
+    skip_regions = data_cfg.get("skip_regions")
     local_objects = build_local_dataloaders(
         batch_size=int(data_cfg["batch_size"]),
         num_workers=int(data_cfg["num_workers"]),
         pin_memory=bool(data_cfg["pin_memory"]),
+        skip_regions=skip_regions,
     )
     local_fused_objects = None
     if bool(train_cfg.get("use_fused_loss", False)):
@@ -151,11 +153,13 @@ def build_data(config: Dict[str, Any]):
             num_workers=int(data_cfg["num_workers"]),
             pin_memory=bool(data_cfg["pin_memory"]),
             max_crops_per_image=data_cfg.get("fused_max_crops_per_image"),
+            skip_regions=skip_regions,
         )
     global_objects = build_global_dataloaders(
         batch_size=min(int(data_cfg["batch_size"]), 4),
         num_workers=int(data_cfg["num_workers"]),
         pin_memory=bool(data_cfg["pin_memory"]),
+        skip_regions=skip_regions,
     )
     return local_objects, global_objects, local_fused_objects
 
@@ -274,6 +278,32 @@ def main() -> None:
 
     train_cfg = config["training"]
     sampling_cfg = config.get("sampling", {})
+    sampling_kwargs = {
+        "sample_every_epochs": int(sampling_cfg.get("sample_every_epochs", 0)),
+        "sampling_output_dir": sampling_cfg.get("sampling_output_dir"),
+        "sample_global_strength": float(sampling_cfg.get("sample_global_strength", 0.30)),
+        "sample_global_guidance_scale": float(sampling_cfg.get("sample_global_guidance_scale", 5.0)),
+        "sample_global_num_inference_steps": int(sampling_cfg.get("sample_global_num_inference_steps", 35)),
+        "sample_global_negative_prompt": sampling_cfg.get("sample_global_negative_prompt"),
+        "sample_local_strength": float(sampling_cfg.get("sample_local_strength", 0.20)),
+        "sample_local_guidance_scale": float(sampling_cfg.get("sample_local_guidance_scale", 0.8)),
+        "sample_local_num_inference_steps": int(sampling_cfg.get("sample_local_num_inference_steps", 40)),
+        "sample_local_negative_prompt": sampling_cfg.get("sample_local_negative_prompt"),
+        "sample_local_recycle_passes": int(sampling_cfg.get("sample_local_recycle_passes", 1)),
+        "sample_local_recycle_strength": sampling_cfg.get("sample_local_recycle_strength"),
+        "sample_local_recycle_guidance_scale": sampling_cfg.get("sample_local_recycle_guidance_scale"),
+        "sample_local_recycle_num_inference_steps": sampling_cfg.get("sample_local_recycle_num_inference_steps"),
+        "sample_residual_alpha": float(sampling_cfg.get("sample_residual_alpha", 0.35)),
+        "sample_residual_sigma": float(sampling_cfg.get("sample_residual_sigma", 9.0)),
+        "sample_use_face_mask": bool(sampling_cfg.get("sample_use_face_mask", True)),
+        "sample_face_mask_blur_sigma": float(sampling_cfg.get("sample_face_mask_blur_sigma", 3.0)),
+        "sample_local_insert_alpha": float(sampling_cfg.get("sample_local_insert_alpha", 1.0)),
+        "sample_local_mask_blur_sigma": float(sampling_cfg.get("sample_local_mask_blur_sigma", 5.0)),
+        "sample_color_match": bool(sampling_cfg.get("sample_color_match", True)),
+        "sample_color_match_strength": float(sampling_cfg.get("sample_color_match_strength", 0.75)),
+        "sample_seed": sampling_cfg.get("sample_seed", 123),
+        "sample_save_grid": bool(sampling_cfg.get("sample_save_grid", True)),
+    }
 
     result = train_global_local_face_aging(
         mixed_local_bundle=mixed_local_bundle,
@@ -292,8 +322,7 @@ def main() -> None:
         checkpoint_root=config["run"]["checkpoint_root"],
         sampling_loader_global=None,
         sampling_loader_local=None,
-        sample_every_epochs=int(sampling_cfg.get("sample_every_epochs", 0)),
-        sampling_output_dir=sampling_cfg.get("sampling_output_dir"),
+        **sampling_kwargs,
         **train_cfg,
     )
 

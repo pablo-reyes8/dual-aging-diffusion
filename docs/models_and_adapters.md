@@ -121,6 +121,38 @@ It:
 3. creates optimizers for trainable adapter parameters;
 4. returns mixed bundles ready for the training wrapper.
 
+## Adapter Dtype Stability
+
+The diffusion backbone can be loaded in reduced precision and trained under AMP, but the trainable adapter parameters must remain in `float32`.
+
+This is intentional:
+
+- the frozen UNet, VAE, and text encoder may run in `bf16` or `fp16`;
+- autocast can still run the forward pass in mixed precision;
+- LoRA/DoRA trainable tensors are stored and updated in `float32`;
+- AdamW optimizer state is therefore built around stable fp32 adapter weights.
+
+The project enforces this in two places:
+
+```text
+src/diffusion_pipeline/load_diffusion_models.py::cast_trainable_parameters_to_fp32
+src/training/mixed_precision.py::ensure_trainable_parameters_fp32
+```
+
+This avoids a failure mode where LoRA/DoRA weights are created in `float16`, the first optimizer step corrupts the adapter weights, and the next UNet forward returns all-NaN `noise_pred` tensors.
+
+The expected symptom of that bug is:
+
+```text
+loss_full/loss_zone/loss_score becomes non-finite
+noise_pred_full/noise_pred_zone/noise_pred_target is fully non-finite
+the failure starts immediately after the first optimizer step
+```
+
+If that pattern appears, rebuild the diffusion bundles and adapters from a clean kernel/runtime. Do not resume from checkpoints created after non-finite adapter updates.
+
+In `LoRALinear`, the adapter path may compute in fp32 and is cast back to the base output dtype before returning. This keeps the UNet output dtype compatible with the rest of the model while preserving optimizer stability.
+
 ## Checkpointing
 
 Checkpoint helpers live in:
@@ -136,4 +168,3 @@ The training wrapper can save:
 - inference copies that contain adapter weights and metadata.
 
 The inference CLI expects adapter `.pt` checkpoints and restores them into freshly loaded diffusion bundles.
-

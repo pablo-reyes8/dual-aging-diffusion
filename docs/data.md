@@ -68,6 +68,38 @@ The local annotations cover facial zones such as:
 
 The sampler uses score-aware and region-aware weighting so high-aging examples and underrepresented anatomical signals can appear more often during training.
 
+## Skipping Local Regions
+
+All local crop builders accept `skip_regions` or the short alias `skip` to remove exact anatomical zones before datasets are created. The same argument is supported by:
+
+```text
+data/create_data.py::build_local_dataloaders
+data/create_data.py::build_local_fused_dataloaders
+data/create_data.py::build_single_person_sampling_loader
+```
+
+The global full-face loader also accepts the argument for a consistent API, but it has no local zones and therefore ignores it.
+
+Example:
+
+```python
+skip = ["labio_superior"]
+
+local_objects = build_local_dataloaders(skip=skip)
+local_fused_objects = build_local_fused_dataloaders(skip=skip)
+sampling_objects = build_single_person_sampling_loader(skip=skip)
+global_objects = build_global_dataloaders(skip=skip)
+```
+
+Skip is intentionally one-zone-at-a-time. For example:
+
+```text
+skip=["labio_superior"] removes only labio_superior
+skip=["comisuras_lineas_marioneta"] removes only comisuras_lineas_marioneta
+```
+
+Use canonical `REGION_ORDER` keys whenever possible. The informal aliases `"labio"` and `"labios"` resolve only to `labio_superior`.
+
 ## Global Branch Dataset
 
 The global branch trains on full-face images. Its purpose is to learn full-face aging semantics.

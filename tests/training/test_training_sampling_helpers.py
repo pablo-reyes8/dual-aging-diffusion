@@ -50,6 +50,8 @@ def test_deterministic_training_reconstruction_sample_uses_inference_fusion(tmp_
         return torch.ones(1, 3, 32, 32) * 0.25
 
     def sample_local_forward_fn(**kwargs):
+        assert kwargs["recycle_passes"] == 2
+        assert kwargs["recycle_strength"] == 0.12
         return [
             {
                 "zone_name": "forehead",
@@ -71,6 +73,8 @@ def test_deterministic_training_reconstruction_sample_uses_inference_fusion(tmp_
         output_dir=tmp_path,
         sample_global_forward_fn=sample_global_forward_fn,
         sample_local_forward_fn=sample_local_forward_fn,
+        sample_local_recycle_passes=2,
+        sample_local_recycle_strength=0.12,
         save_grid=True,
         verbose=False,
     )

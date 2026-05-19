@@ -201,6 +201,56 @@ REGION_ORDER = [
 ]
 
 
+REGION_SKIP_ALIASES = {
+    # Keep skip behavior one-to-one with REGION_ORDER. These aliases only
+    # resolve common wording to a single canonical zone; they never expand to
+    # multiple anatomical regions.
+    "labio": ["labio_superior"],
+    "labios": ["labio_superior"],
+    "upper_lip": ["labio_superior"],
+    "labio_superior": ["labio_superior"],
+}
+
+
+def normalize_region_skip_list(skip_regions: Optional[List[str]] = None) -> List[str]:
+    """
+    Normalizes public skip-region names to canonical local region keys.
+
+    Examples:
+        skip_regions=["labio_superior"]
+            -> ["labio_superior"]
+
+        skip_regions=["labios"]
+            -> ["labio_superior"]
+    """
+    if skip_regions is None:
+        return []
+
+    if isinstance(skip_regions, str):
+        skip_regions = [skip_regions]
+
+    normalized = []
+    for raw_name in skip_regions:
+        key = str(raw_name).strip().lower().replace(" ", "_").replace("-", "_")
+        if not key:
+            continue
+
+        mapped_keys = REGION_SKIP_ALIASES.get(key, [key])
+        for region_key in mapped_keys:
+            if region_key not in normalized:
+                normalized.append(region_key)
+
+    unknown = [k for k in normalized if k not in REGION_TO_ENGLISH]
+    if unknown:
+        valid = sorted(REGION_TO_ENGLISH)
+        raise ValueError(
+            f"Unknown skip region(s): {unknown}. "
+            f"Use canonical region keys or supported aliases. Valid region keys: {valid}"
+        )
+
+    return normalized
+
+
 # ============================================================
 # Prompt cleaning
 # ============================================================
@@ -1116,7 +1166,9 @@ class LocalAgingCropDataset(Dataset):
         jitter_scores_enabled: bool = True,
         enable_horizontal_flip: bool = False,
         normalize_for_diffusion: bool = True,
-        drop_regions: Optional[List[str]] = None):
+        drop_regions: Optional[List[str]] = None,
+        skip: Optional[List[str]] = None,
+        skip_regions: Optional[List[str]] = None):
 
         self.resolution = int(resolution)
         self.context_scale = float(context_scale)
@@ -1124,7 +1176,14 @@ class LocalAgingCropDataset(Dataset):
         self.train = bool(train)
         self.jitter_scores_enabled = bool(jitter_scores_enabled)
 
-        drop_regions = set(drop_regions or [])
+        requested_skip_regions = skip_regions if skip_regions is not None else skip
+        drop_regions = set(
+            normalize_region_skip_list(
+                requested_skip_regions
+                if requested_skip_regions is not None
+                else drop_regions
+            )
+        )
         self.samples = [s for s in samples if s["region_key"] not in drop_regions]
 
         if len(self.samples) == 0:

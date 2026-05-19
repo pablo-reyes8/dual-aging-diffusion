@@ -119,6 +119,7 @@ def train_global_local_face_aging(
     checkpoint_managers: Optional[Dict[str, Any]] = None,
     save_latest: bool = True,
     save_best: bool = True,
+    save_epoch_checkpoints: bool = True,
     save_inference_copy: bool = True,
     local_monitor_key: str = "loss/total",
     global_monitor_key: str = "loss/total",
@@ -151,6 +152,10 @@ def train_global_local_face_aging(
     sample_local_guidance_scale: float = 0.8,
     sample_local_num_inference_steps: int = 40,
     sample_local_negative_prompt: Optional[str] = None,
+    sample_local_recycle_passes: int = 1,
+    sample_local_recycle_strength: Optional[float] = None,
+    sample_local_recycle_guidance_scale: Optional[float] = None,
+    sample_local_recycle_num_inference_steps: Optional[int] = None,
 
     # Sampling deterministic fusion params.
     sample_residual_alpha: float = 0.35,
@@ -543,6 +548,29 @@ def train_global_local_face_aging(
                         save_inference_copy=save_inference_copy,
                     )
 
+                epoch_paths = {}
+
+                if save_epoch_checkpoints:
+                    epoch_paths = local_ckpt_manager.save_epoch(
+                        bundle=mixed_local_bundle,
+                        epoch=epoch,
+                        global_step=local_global_step,
+                        optimizer_step=local_optimizer_step,
+                        loss_value=local_metric_value,
+                        metric_value=local_metric_value,
+                        scaler=scaler,
+                        extra_metadata={
+                            "run_name": run_name,
+                            "branch": "local",
+                            "epoch": epoch,
+                            "monitor_key": local_monitor_key,
+                            "mode_config": local_config,
+                            "grad_accum_steps": local_grad_accum_steps,
+                            "branch_num_epochs": local_num_epochs,
+                        },
+                        save_inference_copy=save_inference_copy,
+                    )
+
                 if verbose:
                     print_branch_summary(
                         branch_name="local",
@@ -557,7 +585,7 @@ def train_global_local_face_aging(
 
                     print_checkpoint_report(
                         branch_name="local",
-                        latest_paths=latest_paths,
+                        latest_paths={**latest_paths, **epoch_paths},
                         best_paths=best_paths,
                         improved=improved,
                     )
@@ -700,6 +728,31 @@ def train_global_local_face_aging(
                         save_inference_copy=save_inference_copy,
                     )
 
+                epoch_paths = {}
+
+                if save_epoch_checkpoints:
+                    epoch_paths = global_ckpt_manager.save_epoch(
+                        bundle=mixed_global_bundle,
+                        epoch=epoch,
+                        global_step=global_global_step,
+                        optimizer_step=global_optimizer_step,
+                        loss_value=global_metric_value,
+                        metric_value=global_metric_value,
+                        scaler=scaler,
+                        extra_metadata={
+                            "run_name": run_name,
+                            "branch": "global",
+                            "epoch": epoch,
+                            "monitor_key": global_monitor_key,
+                            "mode_config": global_config,
+                            "semantic_components": global_semantic_components,
+                            "target_age_range": (min_target_age, max_target_age),
+                            "grad_accum_steps": global_grad_accum_steps,
+                            "branch_num_epochs": global_num_epochs,
+                        },
+                        save_inference_copy=save_inference_copy,
+                    )
+
                 if verbose:
                     print_branch_summary(
                         branch_name="global",
@@ -714,7 +767,7 @@ def train_global_local_face_aging(
 
                     print_checkpoint_report(
                         branch_name="global",
-                        latest_paths=latest_paths,
+                        latest_paths={**latest_paths, **epoch_paths},
                         best_paths=best_paths,
                         improved=improved,
                     )
@@ -786,6 +839,10 @@ def train_global_local_face_aging(
                     sample_local_guidance_scale=sample_local_guidance_scale,
                     sample_local_num_inference_steps=sample_local_num_inference_steps,
                     sample_local_negative_prompt=sample_local_negative_prompt,
+                    sample_local_recycle_passes=sample_local_recycle_passes,
+                    sample_local_recycle_strength=sample_local_recycle_strength,
+                    sample_local_recycle_guidance_scale=sample_local_recycle_guidance_scale,
+                    sample_local_recycle_num_inference_steps=sample_local_recycle_num_inference_steps,
 
                     residual_alpha=sample_residual_alpha,
                     residual_sigma=sample_residual_sigma,

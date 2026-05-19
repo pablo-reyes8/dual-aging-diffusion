@@ -11,6 +11,7 @@ DEFAULT_CONFIG = {
     "num_workers": 0,
     "n_batches": 20,
     "audit": True,
+    "skip_regions": [],
 }
 
 
@@ -52,6 +53,7 @@ def main() -> None:
                 batch_size=int(config["batch_size"]),
                 num_workers=int(config["num_workers"]),
                 n_batches=int(config["n_batches"]),
+                skip_regions=config.get("skip_regions"),
             )
 
         if config["branch"] in {"global", "both"}:
@@ -59,6 +61,7 @@ def main() -> None:
                 batch_size=min(int(config["batch_size"]), 4),
                 num_workers=int(config["num_workers"]),
                 n_batches=int(config["n_batches"]),
+                skip_regions=config.get("skip_regions"),
             )
     else:
         from data.create_data import build_global_dataloaders, build_local_dataloaders
@@ -68,6 +71,7 @@ def main() -> None:
                 batch_size=int(config["batch_size"]),
                 num_workers=int(config["num_workers"]),
                 pin_memory=False,
+                skip_regions=config.get("skip_regions"),
             )
 
         if config["branch"] in {"global", "both"}:
@@ -75,6 +79,7 @@ def main() -> None:
                 batch_size=min(int(config["batch_size"]), 4),
                 num_workers=int(config["num_workers"]),
                 pin_memory=False,
+                skip_regions=config.get("skip_regions"),
             )
 
 

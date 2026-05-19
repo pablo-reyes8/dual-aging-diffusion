@@ -587,15 +587,21 @@ class BranchCheckpointManager:
 
         self.branch_dir = ensure_dir(self.root_dir / self.branch_name)
 
-        self.latest_train_path = self.branch_dir / "latest_training_resume.pt"
-        self.best_train_path = self.branch_dir / "best_training_resume.pt"
+        self.latest_dir = ensure_dir(self.branch_dir / "latest")
+        self.best_dir = ensure_dir(self.branch_dir / "best")
 
-        self.latest_infer_path = self.branch_dir / "latest_adapter_inference.pt"
-        self.best_infer_path = self.branch_dir / "best_adapter_inference.pt"
+        self.latest_train_path = self.latest_dir / "latest_training_resume.pt"
+        self.best_train_path = self.best_dir / "best_training_resume.pt"
+
+        self.latest_infer_path = self.latest_dir / "latest_adapter_inference.pt"
+        self.best_infer_path = self.best_dir / "best_adapter_inference.pt"
 
         self.state_path = self.branch_dir / "checkpoint_state.json"
 
         self.best_metric = None
+
+    def epoch_dir(self, epoch: int) -> Path:
+        return ensure_dir(self.branch_dir / f"epoch_{int(epoch) + 1:03d}")
 
     def is_better(self, metric: Optional[float]) -> bool:
         if metric is None:
@@ -641,7 +647,7 @@ class BranchCheckpointManager:
         """
         train_path = save_training_checkpoint_for_bundle(
             bundle=bundle,
-            output_dir=self.branch_dir,
+            output_dir=self.latest_dir,
             branch_name=self.branch_name,
             epoch=epoch,
             global_step=global_step,
@@ -658,7 +664,7 @@ class BranchCheckpointManager:
         if save_inference_copy:
             infer_path = save_inference_checkpoint_for_bundle(
                 bundle=bundle,
-                output_dir=self.branch_dir,
+                output_dir=self.latest_dir,
                 branch_name=self.branch_name,
                 filename=self.latest_infer_path.name,
                 extra_metadata=extra_metadata,
@@ -666,6 +672,51 @@ class BranchCheckpointManager:
             paths["latest_inference"] = infer_path
 
         self.save_state_json()
+
+        return paths
+
+    def save_epoch(
+        self,
+        bundle: Dict[str, Any],
+        epoch: int,
+        global_step: int,
+        optimizer_step: int,
+        loss_value: Optional[float] = None,
+        metric_value: Optional[float] = None,
+        scaler=None,
+        extra_metadata: Optional[Dict[str, Any]] = None,
+        save_inference_copy: bool = True,
+    ) -> Dict[str, Path]:
+        """
+        Saves an immutable checkpoint snapshot for this branch/epoch.
+        """
+        out_dir = self.epoch_dir(epoch)
+
+        train_path = save_training_checkpoint_for_bundle(
+            bundle=bundle,
+            output_dir=out_dir,
+            branch_name=self.branch_name,
+            epoch=epoch,
+            global_step=global_step,
+            optimizer_step=optimizer_step,
+            loss_value=loss_value,
+            best_metric=self.best_metric,
+            scaler=scaler,
+            filename="training_resume.pt",
+            extra_metadata=extra_metadata,
+        )
+
+        paths = {"epoch_training": train_path}
+
+        if save_inference_copy:
+            infer_path = save_inference_checkpoint_for_bundle(
+                bundle=bundle,
+                output_dir=out_dir,
+                branch_name=self.branch_name,
+                filename="adapter_inference.pt",
+                extra_metadata=extra_metadata,
+            )
+            paths["epoch_inference"] = infer_path
 
         return paths
 
@@ -697,7 +748,7 @@ class BranchCheckpointManager:
 
         train_path = save_training_checkpoint_for_bundle(
             bundle=bundle,
-            output_dir=self.branch_dir,
+            output_dir=self.best_dir,
             branch_name=self.branch_name,
             epoch=epoch,
             global_step=global_step,
@@ -714,7 +765,7 @@ class BranchCheckpointManager:
         if save_inference_copy:
             infer_path = save_inference_checkpoint_for_bundle(
                 bundle=bundle,
-                output_dir=self.branch_dir,
+                output_dir=self.best_dir,
                 branch_name=self.branch_name,
                 filename=self.best_infer_path.name,
                 extra_metadata=extra_metadata,
@@ -744,19 +795,24 @@ def build_global_local_checkpoint_managers(
     Output structure:
         root_dir/
             global/
-                latest_training_resume.pt
-                best_training_resume.pt
-                latest_adapter_inference.pt
-                best_adapter_inference.pt
-                metadata.json
+                latest/
+                    latest_training_resume.pt
+                    latest_adapter_inference.pt
+                    metadata.json
+                best/
+                    best_training_resume.pt
+                    best_adapter_inference.pt
+                    metadata.json
+                epoch_001/
+                    training_resume.pt
+                    adapter_inference.pt
+                    metadata.json
                 checkpoint_state.json
 
             local/
-                latest_training_resume.pt
-                best_training_resume.pt
-                latest_adapter_inference.pt
-                best_adapter_inference.pt
-                metadata.json
+                latest/
+                best/
+                epoch_001/
                 checkpoint_state.json
     """
     root_dir = ensure_dir(Path(root_dir))

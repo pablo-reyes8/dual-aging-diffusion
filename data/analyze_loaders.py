@@ -19,11 +19,12 @@ from data.local_utils import (
 import matplotlib.pyplot as plt
 import torch 
 
-def analyze_local(batch_size: int, num_workers: int, n_batches: int) -> None:
+def analyze_local(batch_size: int, num_workers: int, n_batches: int, skip_regions=None) -> None:
     objects = build_local_dataloaders(
         batch_size=batch_size,
         num_workers=num_workers,
         pin_memory=False,
+        skip_regions=skip_regions,
     )
 
     count_dataset_sizes(
@@ -45,11 +46,12 @@ def analyze_local(batch_size: int, num_workers: int, n_batches: int) -> None:
             print(f"{key:20s}: {type(value).__name__} len={len(value)}")
 
 
-def analyze_global(batch_size: int, num_workers: int, n_batches: int) -> None:
+def analyze_global(batch_size: int, num_workers: int, n_batches: int, skip_regions=None) -> None:
     objects = build_global_dataloaders(
         batch_size=batch_size,
         num_workers=num_workers,
         pin_memory=False,
+        skip_regions=skip_regions,
     )
 
     audit_global_samples(objects["samples"])

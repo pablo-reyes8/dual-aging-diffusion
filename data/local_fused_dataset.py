@@ -15,6 +15,7 @@ from data.local_path_dataset import (
     REGION_ORDER,
     make_local_prompt,
     make_zone_prompt,
+    normalize_region_skip_list,
     region_aware_bbox_to_square,
 )
 
@@ -108,6 +109,16 @@ def group_samples_by_image(samples: List[Dict[str, Any]]) -> List[Dict[str, Any]
     return out
 
 
+def filter_samples_by_skip_regions(
+    samples: List[Dict[str, Any]],
+    skip_regions: Optional[List[str]] = None,
+) -> List[Dict[str, Any]]:
+    skipped = set(normalize_region_skip_list(skip_regions))
+    if not skipped:
+        return samples
+    return [s for s in samples if str(s["region_key"]) not in skipped]
+
+
 def select_one_sample_per_region(samples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     by_region: Dict[str, Dict[str, Any]] = {}
     for sample in samples:
@@ -120,6 +131,16 @@ def select_one_sample_per_region(samples: List[Dict[str, Any]]) -> List[Dict[str
         for region in REGION_ORDER
         if region in by_region
     ]
+
+
+def sort_samples_by_region_and_box(samples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return sorted(
+        samples,
+        key=lambda s: (
+            REGION_ORDER.index(s["region_key"]) if s["region_key"] in REGION_ORDER else 999,
+            int(s.get("box_index", 0) or 0),
+        ),
+    )
 
 
 class LocalAlignedFusedDataset(Dataset):
@@ -140,8 +161,15 @@ class LocalAlignedFusedDataset(Dataset):
         global_csv_path: Path = GLOBAL_CSV_PATH,
         max_crops_per_image: Optional[int] = None,
         mask_feather: int = 24,
+        skip: Optional[List[str]] = None,
+        skip_regions: Optional[List[str]] = None,
     ):
-        self.groups = group_samples_by_image(samples)
+        self.skip_regions = normalize_region_skip_list(
+            skip_regions if skip_regions is not None else skip
+        )
+        self.groups = group_samples_by_image(
+            filter_samples_by_skip_regions(samples, self.skip_regions)
+        )
         if len(self.groups) == 0:
             raise ValueError("LocalAlignedFusedDataset received no grouped samples.")
 
@@ -298,6 +326,8 @@ class SinglePersonSamplingDataset(Dataset):
         context_scale: float = 1.20,
         global_csv_path: Path = GLOBAL_CSV_PATH,
         mask_feather: int = 24,
+        skip: Optional[List[str]] = None,
+        skip_regions: Optional[List[str]] = None,
     ):
         self.image_stem = str(image_stem)
         self.target_age = int(target_age)
@@ -306,9 +336,16 @@ class SinglePersonSamplingDataset(Dataset):
         self.local_resolution = int(local_resolution)
         self.context_scale = float(context_scale)
         self.mask_feather = int(mask_feather)
+        self.skip_regions = normalize_region_skip_list(
+            skip_regions if skip_regions is not None else skip
+        )
         self.attribute_lookup = load_global_attribute_phrase_lookup(Path(global_csv_path))
 
-        matching = [s for s in samples if str(s["image_stem"]) == self.image_stem]
+        matching = [
+            s
+            for s in filter_samples_by_skip_regions(samples, self.skip_regions)
+            if str(s["image_stem"]) == self.image_stem
+        ]
         if not matching:
             available = sorted({str(s["image_stem"]) for s in samples})[:10]
             raise ValueError(
@@ -316,7 +353,7 @@ class SinglePersonSamplingDataset(Dataset):
                 f"First available stems: {available}"
             )
 
-        selected = select_one_sample_per_region(matching)
+        selected = sort_samples_by_region_and_box(matching)
         if len(selected) == 0:
             raise ValueError(f"No valid region samples found for image_stem={self.image_stem}.")
 
@@ -373,6 +410,7 @@ class SinglePersonSamplingDataset(Dataset):
             )
             zones.append({
                 "zone_name": str(sample["region_key"]),
+                "box_index": sample.get("box_index", None),
                 "crop": self.crop_transform(crop),
                 "prompt": make_local_prompt(
                     region_key=sample["region_key"],
