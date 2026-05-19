@@ -27,8 +27,7 @@ def cuda_memory_report(label: str = "", device: Optional[torch.device] = None) -
     report = {
         "allocated_gb": allocated,
         "reserved_gb": reserved,
-        "max_allocated_gb": max_allocated,
-    }
+        "max_allocated_gb": max_allocated}
 
     if label:
         print(

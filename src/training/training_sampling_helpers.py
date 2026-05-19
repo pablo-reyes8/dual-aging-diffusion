@@ -14,11 +14,14 @@ from src.training.training_memory_helpers import (
 )
 
 try:
-    from src.inference.global_local_fusion import fuse_global_local_outputs
     from src.inference.image_tensor_utils import image_to_tensor01, tensor01_to_pil
 except ImportError:
     image_to_tensor01 = None
     tensor01_to_pil = None
+
+try:
+    from src.inference.global_local_fusion import fuse_global_local_outputs
+except ImportError:
     fuse_global_local_outputs = None
 
 # ============================================================

@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import gc
+import os
 from typing import Any, Dict, Optional, Union
 
 import torch
@@ -18,6 +20,52 @@ from src.inference.fusion_bundle_config import (
     _resolve_fusion_device,
     _resolve_fusion_dtype,
 )
+
+
+@contextlib.contextmanager
+def quiet_hf_loading():
+    """
+    Suppresses Hugging Face/diffusers progress bars during from_pretrained.
+    """
+    previous_hf_progress = os.environ.get("HF_HUB_DISABLE_PROGRESS_BARS")
+    os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+
+    try:
+        from huggingface_hub.utils import disable_progress_bars
+        disable_progress_bars()
+    except Exception:
+        pass
+
+    try:
+        from diffusers.utils import logging as diffusers_logging
+        previous_diffusers_verbosity = diffusers_logging.get_verbosity()
+        diffusers_logging.set_verbosity_error()
+    except Exception:
+        previous_diffusers_verbosity = None
+        diffusers_logging = None
+
+    try:
+        from transformers.utils import logging as transformers_logging
+        previous_transformers_verbosity = transformers_logging.get_verbosity()
+        transformers_logging.set_verbosity_error()
+    except Exception:
+        previous_transformers_verbosity = None
+        transformers_logging = None
+
+    try:
+        yield
+    finally:
+        if previous_hf_progress is None:
+            os.environ.pop("HF_HUB_DISABLE_PROGRESS_BARS", None)
+        else:
+            os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = previous_hf_progress
+
+        if diffusers_logging is not None and previous_diffusers_verbosity is not None:
+            diffusers_logging.set_verbosity(previous_diffusers_verbosity)
+
+        if transformers_logging is not None and previous_transformers_verbosity is not None:
+            transformers_logging.set_verbosity(previous_transformers_verbosity)
+
 
 def build_fusion_bundle(
     model_id: str = "stabilityai/stable-diffusion-xl-refiner-1.0",
@@ -34,6 +82,7 @@ def build_fusion_bundle(
     enable_attention_slicing: bool = True,
     enable_vae_slicing: bool = True,
     enable_model_cpu_offload: bool = False,
+    suppress_hf_progress_bars: bool = True,
 
     verbose: bool = True,
 ) -> Dict[str, Any]:
@@ -91,11 +140,13 @@ def build_fusion_bundle(
             "Install with: pip install diffusers transformers accelerate safetensors"
         ) from e
 
-    pipe = AutoPipelineForImage2Image.from_pretrained(
-        model_id,
-        torch_dtype=dtype,
-        use_safetensors=True,
-    )
+    load_context = quiet_hf_loading() if suppress_hf_progress_bars else contextlib.nullcontext()
+    with load_context:
+        pipe = AutoPipelineForImage2Image.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
+            use_safetensors=True,
+        )
 
     pipe.set_progress_bar_config(disable=True)
 
@@ -127,21 +178,12 @@ def build_fusion_bundle(
     }
 
     if verbose:
-        print("\n" + "=" * 100)
-        print("Fusion bundle")
-        print("=" * 100)
-        print("Model id              :", cfg.model_id)
-        print("Device                :", cfg.device)
-        print("Dtype                 :", cfg.torch_dtype)
-        print("Strength              :", cfg.strength)
-        print("Guidance scale        :", cfg.guidance_scale)
-        print("Inference steps       :", cfg.num_inference_steps)
-        print("Trainable params      :", param_count["trainable"])
-        print("Total loaded params   :", param_count["total"])
-        print("-" * 100)
-        print("Prompt                :", cfg.prompt)
-        print("Negative prompt       :", cfg.negative_prompt)
-        print("=" * 100)
+        print(
+            "[Refiner loaded] "
+            f"model={cfg.model_id} | device={cfg.device} | dtype={cfg.torch_dtype} | "
+            f"strength={cfg.strength} | guidance={cfg.guidance_scale} | "
+            f"steps={cfg.num_inference_steps}"
+        )
 
     return fusion_bundle
 

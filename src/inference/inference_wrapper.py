@@ -70,11 +70,13 @@ DEFAULT_INFERENCE_WRAPPER_CONFIG: Dict[str, Any] = {
         "enable_attention_slicing": True,
         "enable_vae_slicing": True,
         "enable_model_cpu_offload": False,
+        "suppress_hf_progress_bars": True,
         "offload_after": True,
     },
     "runtime": {
         "offload_after_each_stage": True,
         "return_pil": True,
+        "save_grid": True,
         "verbose": True,
     },
 }
@@ -202,6 +204,7 @@ def _build_refiner_from_config(
         enable_attention_slicing=bool(refiner_cfg.get("enable_attention_slicing", True)),
         enable_vae_slicing=bool(refiner_cfg.get("enable_vae_slicing", True)),
         enable_model_cpu_offload=bool(refiner_cfg.get("enable_model_cpu_offload", False)),
+        suppress_hf_progress_bars=bool(refiner_cfg.get("suppress_hf_progress_bars", True)),
         verbose=verbose,
     )
 
@@ -210,6 +213,7 @@ def save_inference_wrapper_outputs(
     fusion_out: Dict[str, Any],
     output_dir: Union[str, Path],
     prefix: str = "inference",
+    save_grid: bool = True,
 ) -> Dict[str, Path]:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -227,6 +231,36 @@ def save_inference_wrapper_outputs(
         final_path = output_dir / "final.png"
         fusion_out["pil"]["x_final"].save(final_path)
         paths["final"] = final_path
+
+    if save_grid:
+        try:
+            from PIL import Image, ImageDraw
+
+            grid_keys = ["x_orig", "x_global", "x_coarse", "x_blend", "x_final"]
+            images = [
+                fusion_out["pil"][key].convert("RGB")
+                for key in grid_keys
+                if key in fusion_out["pil"] and fusion_out["pil"][key] is not None
+            ]
+
+            if images:
+                w, h = images[0].size
+                label_h = 28
+                grid = Image.new("RGB", (w * len(images), h + label_h), "white")
+                draw = ImageDraw.Draw(grid)
+
+                for idx, (key, image) in enumerate(zip(grid_keys, images)):
+                    if image.size != (w, h):
+                        image = image.resize((w, h))
+                    grid.paste(image, (idx * w, label_h))
+                    draw.text((idx * w + 8, 8), key, fill=(0, 0, 0))
+
+                grid_path = output_dir / f"{prefix}_grid.png"
+                grid.save(grid_path)
+                paths["grid"] = grid_path
+
+        except Exception as e:
+            print(f"└─ [WARN] Could not save inference grid: {e}")
 
     return paths
 
@@ -397,6 +431,7 @@ def run_sampling_objects_inference(
             fusion_out=fusion_out,
             output_dir=output_dir,
             prefix=output_prefix,
+            save_grid=bool(runtime_cfg.get("save_grid", True)),
         )
 
     return {
@@ -409,4 +444,3 @@ def run_sampling_objects_inference(
         "restore_reports": restore_reports,
         "config": config,
     }
-

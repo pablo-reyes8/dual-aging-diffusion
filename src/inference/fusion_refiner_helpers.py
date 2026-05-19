@@ -54,6 +54,15 @@ def apply_fusion_refiner_if_available(
     guidance_scale = float(guidance_scale if guidance_scale is not None else cfg.guidance_scale)
     num_inference_steps = int(num_inference_steps if num_inference_steps is not None else cfg.num_inference_steps)
 
+    min_effective_strength = (1.0 / max(1, num_inference_steps)) + 1e-3
+    if 0.0 < strength < min_effective_strength:
+        print(
+            "[WARN] Fusion refiner strength is too low for the requested step count. "
+            f"Clamping strength from {strength:.6f} to {min_effective_strength:.6f} "
+            "to avoid an empty SDXL img2img timestep schedule."
+        )
+        strength = min_effective_strength
+
     image_pil = tensor01_to_pil(x_blend)
 
     with torch.inference_mode():
