@@ -147,8 +147,16 @@ def enable_unet_gradient_checkpointing(bundle: Dict[str, Any], branch_name: str 
     if unet is None:
         return
 
+    if bool(bundle.get("_gradient_checkpointing_enabled", False)):
+        return
+
+    if bool(getattr(unet, "is_gradient_checkpointing", False)):
+        bundle["_gradient_checkpointing_enabled"] = True
+        return
+
     if hasattr(unet, "enable_gradient_checkpointing"):
         unet.enable_gradient_checkpointing()
+        bundle["_gradient_checkpointing_enabled"] = True
         print(f"[{branch_name}] gradient checkpointing enabled on UNet.")
     else:
         print(f"[{branch_name}] UNet has no enable_gradient_checkpointing().")
