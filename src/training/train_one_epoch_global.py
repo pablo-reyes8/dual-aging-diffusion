@@ -505,7 +505,8 @@ def train_one_epoch_global(
                 if verbose:
                     print(
                         f"[WARN] Non-finite global source loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(loss_out_source)}"
                     )
 
                 continue
@@ -552,7 +553,8 @@ def train_one_epoch_global(
                 if verbose:
                     print(
                         f"[WARN] Non-finite global neutral loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(loss_out_neutral)}"
                     )
 
                 continue
@@ -620,7 +622,8 @@ def train_one_epoch_global(
                 if verbose:
                     print(
                         f"[WARN] Non-finite global loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(loss_out)}"
                     )
 
                 continue
@@ -676,12 +679,22 @@ def train_one_epoch_global(
         )
 
         if should_step:
-            optimizer_step_with_optional_scaler(
+            step_applied = optimizer_step_with_optional_scaler(
                 optimizer=optimizer,
                 scaler=scaler,
                 grad_clip=grad_clip,
                 parameters=trainable_params,
             )
+
+            if not step_applied:
+                skipped_steps += 1
+                optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
+                if verbose:
+                    print(
+                        f"[WARN] Non-finite global gradients at batch_idx={batch_idx}. "
+                        "Skipping optimizer step."
+                    )
+                continue
 
             if step_scheduler and scheduler is not None:
                 scheduler.step()

@@ -305,7 +305,10 @@ class LDLALocalAgingLoss(nn.Module):
             dtype=self.score_net_input_dtype).view(-1)
 
         # No torch.no_grad() here: gradient must flow to decoded_for_score.
-        score_pred = self.score_net(decoded_for_score).view(-1)
+        # Keep ScoreNet in fp32 even when the diffusion loss is under bf16/fp16
+        # autocast; auxiliary predictors are a common source of NaN gradients.
+        with torch.amp.autocast(device_type=self.device.type, enabled=False):
+            score_pred = self.score_net(decoded_for_score.float()).view(-1)
 
         loss_score = F.mse_loss(score_pred.float(), target_scores.float())
 

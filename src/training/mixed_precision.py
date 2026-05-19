@@ -485,7 +485,8 @@ def optimizer_step_with_optional_scaler(
     optimizer: torch.optim.Optimizer,
     scaler=None,
     grad_clip: Optional[float] = None,
-    parameters=None) -> None:
+    parameters=None,
+    skip_nonfinite_grad: bool = True) -> bool:
 
     """
     Optimizer step helper with optional GradScaler and optional gradient clipping.
@@ -495,17 +496,50 @@ def optimizer_step_with_optional_scaler(
 
     For bf16:
         normal clipping and optimizer.step().
+    Returns:
+        True if optimizer.step() was applied, False if non-finite gradients
+        were detected and the step was skipped.
     """
+    params = None
+    if parameters is not None:
+        params = list(parameters)
+
+    def _has_nonfinite_grad() -> bool:
+        if params is None:
+            return False
+        for p in params:
+            if p.grad is None:
+                continue
+            if not torch.isfinite(p.grad.detach()).all():
+                return True
+        return False
+
     if scaler is not None:
-        if grad_clip is not None and parameters is not None:
+        if params is not None:
             scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(parameters, grad_clip)
+
+        if skip_nonfinite_grad and _has_nonfinite_grad():
+            scaler.update()
+            return False
+
+        if grad_clip is not None and params is not None:
+            total_norm = torch.nn.utils.clip_grad_norm_(params, grad_clip)
+            if skip_nonfinite_grad and not torch.isfinite(total_norm.detach()):
+                scaler.update()
+                return False
 
         scaler.step(optimizer)
         scaler.update()
+        return True
 
     else:
-        if grad_clip is not None and parameters is not None:
-            torch.nn.utils.clip_grad_norm_(parameters, grad_clip)
+        if skip_nonfinite_grad and _has_nonfinite_grad():
+            return False
+
+        if grad_clip is not None and params is not None:
+            total_norm = torch.nn.utils.clip_grad_norm_(params, grad_clip)
+            if skip_nonfinite_grad and not torch.isfinite(total_norm.detach()):
+                return False
 
         optimizer.step()
+        return True

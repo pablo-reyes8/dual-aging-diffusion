@@ -194,7 +194,8 @@ class LocalFusedFusionLoss(nn.Module):
                 valid_mask=valid_mask,
                 output_size=self.local_resolution,
             )
-            score_pred = self.score_net(fused_crops.float()).view(-1)
+            with torch.amp.autocast(device_type=fused_crops.device.type, enabled=False):
+                score_pred = self.score_net(fused_crops.float()).view(-1)
             loss_fuse_score = F.mse_loss(score_pred.float(), target.float())
 
         edge = fused["edge_masks"].detach()

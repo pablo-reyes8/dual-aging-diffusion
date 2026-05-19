@@ -512,10 +512,11 @@ class GlobalAgingLoss(nn.Module):
         # Identity loss
         # ------------------------------
         if compute_id:
-            identity_similarity = self.global_loss_bundle.identity_similarity(
-                source_images=source_images,
-                generated_images=generated_images,
-            )
+            with torch.amp.autocast(device_type=device.type, enabled=False):
+                identity_similarity = self.global_loss_bundle.identity_similarity(
+                    source_images=source_images.float(),
+                    generated_images=generated_images.float(),
+                )
 
             loss_id_per = 1.0 - identity_similarity.float()
 
@@ -524,20 +525,22 @@ class GlobalAgingLoss(nn.Module):
         # ------------------------------
         if compute_age or compute_delta_age:
             # Generated prediction must keep grad to generated image.
-            age_gen_pred = self.global_loss_bundle.predict_age(
-                generated_images,
-                grad_to_input=True,
-            ).float().view(-1)
+            with torch.amp.autocast(device_type=device.type, enabled=False):
+                age_gen_pred = self.global_loss_bundle.predict_age(
+                    generated_images.float(),
+                    grad_to_input=True,
+                ).float().view(-1)
 
             if compute_age:
                 loss_age_per = torch.abs(age_gen_pred - target_ages) / self.age_loss_scale
 
             if compute_delta_age:
                 # Source prediction does not need grad.
-                age_src_pred = self.global_loss_bundle.predict_age(
-                    source_images,
-                    grad_to_input=False,
-                ).float().view(-1)
+                with torch.amp.autocast(device_type=device.type, enabled=False):
+                    age_src_pred = self.global_loss_bundle.predict_age(
+                        source_images.float(),
+                        grad_to_input=False,
+                    ).float().view(-1)
 
                 target_delta = target_ages - source_ages
                 pred_delta = age_gen_pred - age_src_pred.detach()
@@ -550,10 +553,11 @@ class GlobalAgingLoss(nn.Module):
         # Perceptual loss
         # ------------------------------
         if compute_perc:
-            lpips_score = self.global_loss_bundle.perceptual_distance(
-                source_images=source_images,
-                generated_images=generated_images,
-            ).float().view(-1)
+            with torch.amp.autocast(device_type=device.type, enabled=False):
+                lpips_score = self.global_loss_bundle.perceptual_distance(
+                    source_images=source_images.float(),
+                    generated_images=generated_images.float(),
+                ).float().view(-1)
 
             loss_perc_per = lpips_score
 

@@ -242,6 +242,28 @@ def call_local_loss_fn(
     return loss_out
 
 
+def nonfinite_loss_details(loss_out: Dict[str, Any], max_items: int = 8) -> str:
+    """
+    Short diagnostic string for loss dictionaries with NaN/Inf tensors.
+    """
+    details = []
+    for key, value in loss_out.items():
+        if not torch.is_tensor(value):
+            continue
+
+        detached = value.detach()
+        if detached.numel() == 0 or torch.isfinite(detached).all():
+            continue
+
+        nonfinite = (~torch.isfinite(detached)).sum().item()
+        details.append(f"{key}: shape={tuple(detached.shape)} nonfinite={int(nonfinite)}")
+
+        if len(details) >= int(max_items):
+            break
+
+    return "; ".join(details) if details else "no non-finite tensor components found"
+
+
 def _flatten_nested_prompts(prompts: List[List[str]], valid_mask: torch.Tensor) -> List[str]:
     out: List[str] = []
     valid_cpu = valid_mask.detach().cpu()
@@ -613,7 +635,8 @@ def train_one_epoch_local(
                 if verbose:
                     print(
                         f"[WARN] Non-finite source loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(loss_out_source)}"
                     )
 
                 continue
@@ -662,7 +685,8 @@ def train_one_epoch_local(
                 if verbose:
                     print(
                         f"[WARN] Non-finite neutral loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(loss_out_neutral)}"
                     )
 
                 continue
@@ -729,7 +753,8 @@ def train_one_epoch_local(
                 if verbose:
                     print(
                         f"[WARN] Non-finite local loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(loss_out)}"
                     )
 
                 continue
@@ -811,7 +836,8 @@ def train_one_epoch_local(
                 if verbose:
                     print(
                         f"[WARN] Non-finite fused local loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients."
+                        "Skipping accumulated gradients. "
+                        f"Components: {nonfinite_loss_details(fused_out)}"
                     )
 
                 continue
@@ -881,12 +907,22 @@ def train_one_epoch_local(
         )
 
         if should_step:
-            optimizer_step_with_optional_scaler(
+            step_applied = optimizer_step_with_optional_scaler(
                 optimizer=optimizer,
                 scaler=scaler,
                 grad_clip=grad_clip,
                 parameters=trainable_params,
             )
+
+            if not step_applied:
+                skipped_steps += 1
+                optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
+                if verbose:
+                    print(
+                        f"[WARN] Non-finite local gradients at batch_idx={batch_idx}. "
+                        "Skipping optimizer step."
+                    )
+                continue
 
             if step_scheduler and scheduler is not None:
                 scheduler.step()

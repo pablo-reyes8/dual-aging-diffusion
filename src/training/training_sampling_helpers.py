@@ -14,8 +14,9 @@ from src.training.training_memory_helpers import (
 
 try:
     from src.inference.global_local_fusion import fuse_global_local_outputs
-    from src.inference.image_tensor_utils import tensor01_to_pil
+    from src.inference.image_tensor_utils import image_to_tensor01, tensor01_to_pil
 except ImportError:
+    image_to_tensor01 = None
     tensor01_to_pil = None
     fuse_global_local_outputs = None
 
@@ -251,9 +252,9 @@ def _call_img2img_pipe_safe(
     Assumes image can be PIL or tensor convertible by your existing utilities.
     """
     if torch.is_tensor(image):
-        if tensor01_to_pil is None:
-            raise ImportError("tensor01_to_pil must be available from src.inference.image_tensor_utils for tensor sampling inputs.")
-        image_input = tensor01_to_pil(image)
+        if image_to_tensor01 is None or tensor01_to_pil is None:
+            raise ImportError("image_to_tensor01 and tensor01_to_pil must be available from src.inference.image_tensor_utils for tensor sampling inputs.")
+        image_input = tensor01_to_pil(image_to_tensor01(image))
     else:
         image_input = image
 
@@ -280,6 +281,154 @@ def _call_img2img_pipe_safe(
     return out
 
 
+def _bundle_has_tensor_img2img_components(bundle: Dict[str, Any]) -> bool:
+    required = ["vae", "unet", "tokenizer", "text_encoder"]
+    has_core = all(k in bundle and bundle[k] is not None for k in required)
+    has_scheduler = (
+        bundle.get("scheduler_infer", None) is not None
+        or bundle.get("scheduler_train", None) is not None
+    )
+    return bool(has_core and has_scheduler)
+
+
+def _image_to_minus1_1_tensor(image, *, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+    if image_to_tensor01 is None:
+        raise ImportError("image_to_tensor01 must be available from src.inference.image_tensor_utils for tensor bundle sampling.")
+
+    x01 = image_to_tensor01(image, device=device, dtype=dtype)
+    return (x01 * 2.0 - 1.0).clamp(-1.0, 1.0)
+
+
+@torch.inference_mode()
+def _img2img_tensor_bundle_safe(
+    *,
+    bundle: Dict[str, Any],
+    image,
+    prompt: str,
+    device: torch.device,
+    strength: float,
+    guidance_scale: float,
+    num_inference_steps: int,
+    negative_prompt: Optional[str] = None,
+    generator: Optional[torch.Generator] = None,
+) -> torch.Tensor:
+    """
+    Minimal deterministic img2img path for the project's training bundles.
+
+    It uses the already-loaded VAE, UNet, tokenizer, text encoder and
+    scheduler_infer/scheduler_train, so monitoring sampling does not require
+    a diffusers pipeline object inside the bundle.
+    """
+    if not _bundle_has_tensor_img2img_components(bundle):
+        missing = [
+            key for key in ["vae", "unet", "tokenizer", "text_encoder", "scheduler_infer"]
+            if bundle.get(key, None) is None
+        ]
+        raise KeyError(f"Bundle does not expose pipeline or tensor img2img components. Missing: {missing}")
+
+    vae = bundle["vae"]
+    unet = bundle["unet"]
+    tokenizer = bundle["tokenizer"]
+    text_encoder = bundle["text_encoder"]
+    scheduler = bundle.get("scheduler_infer", None) or bundle["scheduler_train"]
+
+    unet_dtype = next(unet.parameters()).dtype
+    vae_dtype = next(vae.parameters()).dtype
+    text_dtype = next(text_encoder.parameters()).dtype
+
+    num_inference_steps = max(1, int(num_inference_steps))
+    strength = float(strength)
+
+    image_tensor = _image_to_minus1_1_tensor(
+        image,
+        device=device,
+        dtype=vae_dtype,
+    )
+
+    if strength <= 0:
+        return image_tensor.detach()
+
+    text_inputs = tokenizer(
+        [negative_prompt or "", str(prompt)],
+        padding="max_length",
+        max_length=tokenizer.model_max_length,
+        truncation=True,
+        return_tensors="pt",
+    )
+    input_ids = text_inputs.input_ids.to(device)
+    attention_mask = getattr(text_inputs, "attention_mask", None)
+    if attention_mask is not None:
+        attention_mask = attention_mask.to(device)
+
+    text_out = text_encoder(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        return_dict=True,
+    )
+    text_embeds = text_out.last_hidden_state.to(device=device, dtype=text_dtype)
+
+    latents = vae.encode(image_tensor).latent_dist.mean
+    latents = latents * vae.config.scaling_factor
+    latents = latents.to(device=device, dtype=unet_dtype)
+
+    try:
+        scheduler.set_timesteps(num_inference_steps, device=device)
+    except TypeError:
+        scheduler.set_timesteps(num_inference_steps)
+
+    timesteps_all = scheduler.timesteps.to(device)
+    init_timestep = min(max(int(num_inference_steps * strength), 1), num_inference_steps)
+    t_start = max(num_inference_steps - init_timestep, 0)
+    timesteps = timesteps_all[t_start:]
+
+    if timesteps.numel() == 0:
+        return image_tensor.detach()
+
+    if generator is not None and getattr(generator, "device", None) != device:
+        local_generator = torch.Generator(device=device)
+        local_generator.manual_seed(int(generator.initial_seed()))
+        generator = local_generator
+
+    noise = torch.randn(
+        latents.shape,
+        generator=generator,
+        device=device,
+        dtype=unet_dtype,
+    )
+    first_timestep = timesteps[0].repeat(latents.shape[0])
+    latents = scheduler.add_noise(latents, noise, first_timestep).to(dtype=unet_dtype)
+
+    for t in timesteps:
+        latent_model_input = torch.cat([latents, latents], dim=0)
+        latent_model_input = scheduler.scale_model_input(latent_model_input, t)
+
+        noise_pred = unet(
+            latent_model_input.to(dtype=unet_dtype),
+            t,
+            encoder_hidden_states=text_embeds.to(dtype=unet_dtype),
+            return_dict=True,
+        ).sample
+
+        noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+        noise_pred = noise_pred_uncond + float(guidance_scale) * (
+            noise_pred_text - noise_pred_uncond
+        )
+
+        latents = scheduler.step(
+            noise_pred,
+            t,
+            latents,
+            return_dict=True,
+        ).prev_sample
+
+    decoded = vae.decode(
+        (latents / vae.config.scaling_factor).to(dtype=vae_dtype),
+        return_dict=True,
+    ).sample
+
+    return decoded.clamp(-1.0, 1.0).detach().float()
+
+
 def default_sample_global_forward(
     *,
     mixed_global_bundle: Dict[str, Any],
@@ -293,11 +442,29 @@ def default_sample_global_forward(
     generator: Optional[torch.Generator] = None,
 ):
     """
-    Default global sampling forward using bundle pipeline.
+    Default global sampling forward.
 
-    Override with sample_global_forward_fn if your pipeline is custom.
+    Uses a diffusers pipeline when the bundle exposes one. Otherwise it falls
+    back to the project's tensor bundle path.
     """
-    pipe = _get_img2img_pipe_from_bundle_safe(mixed_global_bundle, "mixed_global_bundle")
+    pipe = None
+    for key in ["pipe", "pipeline", "img2img_pipeline"]:
+        if key in mixed_global_bundle and mixed_global_bundle[key] is not None:
+            pipe = mixed_global_bundle[key]
+            break
+
+    if pipe is None:
+        return _img2img_tensor_bundle_safe(
+            bundle=mixed_global_bundle,
+            image=x_orig,
+            prompt=global_prompt,
+            device=device,
+            strength=strength,
+            guidance_scale=guidance_scale,
+            num_inference_steps=num_inference_steps,
+            negative_prompt=negative_prompt,
+            generator=generator,
+        )
 
     if hasattr(pipe, "to"):
         pipe.to(device)
@@ -329,7 +496,7 @@ def default_sample_local_forward(
     generator: Optional[torch.Generator] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Default local crop sampling forward using bundle pipeline.
+    Default local crop sampling forward.
 
     Returns local_outputs compatible with fuse_global_local_outputs:
         [
@@ -341,12 +508,16 @@ def default_sample_local_forward(
             }
         ]
     """
-    pipe = _get_img2img_pipe_from_bundle_safe(mixed_local_bundle, "mixed_local_bundle")
+    pipe = None
+    for key in ["pipe", "pipeline", "img2img_pipeline"]:
+        if key in mixed_local_bundle and mixed_local_bundle[key] is not None:
+            pipe = mixed_local_bundle[key]
+            break
 
-    if hasattr(pipe, "to"):
+    if pipe is not None and hasattr(pipe, "to"):
         pipe.to(device)
 
-    if hasattr(pipe, "set_progress_bar_config"):
+    if pipe is not None and hasattr(pipe, "set_progress_bar_config"):
         pipe.set_progress_bar_config(disable=True)
 
     local_outputs = []
@@ -355,16 +526,29 @@ def default_sample_local_forward(
         crop = zone["crop"]
         prompt = zone["prompt"]
 
-        aged_crop = _call_img2img_pipe_safe(
-            pipe=pipe,
-            image=crop,
-            prompt=prompt,
-            negative_prompt=zone.get("negative_prompt", negative_prompt),
-            strength=float(zone.get("strength", strength)),
-            guidance_scale=float(zone.get("guidance_scale", guidance_scale)),
-            num_inference_steps=int(zone.get("num_inference_steps", num_inference_steps)),
-            generator=generator,
-        )
+        if pipe is None:
+            aged_crop = _img2img_tensor_bundle_safe(
+                bundle=mixed_local_bundle,
+                image=crop,
+                prompt=prompt,
+                negative_prompt=zone.get("negative_prompt", negative_prompt),
+                device=device,
+                strength=float(zone.get("strength", strength)),
+                guidance_scale=float(zone.get("guidance_scale", guidance_scale)),
+                num_inference_steps=int(zone.get("num_inference_steps", num_inference_steps)),
+                generator=generator,
+            )
+        else:
+            aged_crop = _call_img2img_pipe_safe(
+                pipe=pipe,
+                image=crop,
+                prompt=prompt,
+                negative_prompt=zone.get("negative_prompt", negative_prompt),
+                strength=float(zone.get("strength", strength)),
+                guidance_scale=float(zone.get("guidance_scale", guidance_scale)),
+                num_inference_steps=int(zone.get("num_inference_steps", num_inference_steps)),
+                generator=generator,
+            )
 
         local_outputs.append({
             "zone_name": zone.get("zone_name", None),
