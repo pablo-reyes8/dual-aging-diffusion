@@ -38,6 +38,67 @@ def make_soft_rect_mask(size: int = 256, feather: int = 24) -> torch.Tensor:
     return mask.clamp(0.0, 1.0)
 
 
+def make_bbox_soft_mask(
+    *,
+    size: int,
+    bbox: Dict[str, Any],
+    crop_box: tuple[int, int, int, int],
+    feather: int = 24,
+    expansion: float = 1.12,
+) -> torch.Tensor:
+    """
+    Soft mask for the annotated local region inside a square context crop.
+
+    The crop image contains context around the annotation, but insertion should
+    not paste that whole square back into the face. Otherwise later zones can
+    overwrite earlier zones and make it look like a region was not generated.
+    """
+    left, top, right, bottom = [float(v) for v in crop_box]
+    crop_w = max(1.0, right - left)
+    crop_h = max(1.0, bottom - top)
+
+    x = float(bbox["x"])
+    y = float(bbox["y"])
+    w = float(bbox["w"])
+    h = float(bbox["h"])
+
+    expansion = max(1.0, float(expansion))
+    cx = x + 0.5 * w
+    cy = y + 0.5 * h
+    w = w * expansion
+    h = h * expansion
+    x1_f = cx - 0.5 * w
+    x2_f = cx + 0.5 * w
+    y1_f = cy - 0.5 * h
+    y2_f = cy + 0.5 * h
+
+    x1 = int(round((x1_f - left) / crop_w * size))
+    x2 = int(round((x2_f - left) / crop_w * size))
+    y1 = int(round((y1_f - top) / crop_h * size))
+    y2 = int(round((y2_f - top) / crop_h * size))
+
+    x1 = max(0, min(size - 1, x1))
+    x2 = max(x1 + 1, min(size, x2))
+    y1 = max(0, min(size - 1, y1))
+    y2 = max(y1 + 1, min(size, y2))
+
+    mask = torch.zeros(1, size, size, dtype=torch.float32)
+    patch_h = y2 - y1
+    patch_w = x2 - x1
+    patch = torch.ones(1, patch_h, patch_w, dtype=torch.float32)
+
+    feather = int(max(0, min(feather, patch_h // 2, patch_w // 2)))
+    if feather > 0:
+        ramp = torch.linspace(0.0, 1.0, feather, dtype=torch.float32)
+        patch[:, :feather, :] *= ramp.view(1, feather, 1)
+        patch[:, -feather:, :] *= ramp.flip(0).view(1, feather, 1)
+        patch[:, :, :feather] *= ramp.view(1, 1, feather)
+        patch[:, :, -feather:] *= ramp.flip(0).view(1, 1, feather)
+
+    mask[:, y1:y2, x1:x2] = patch
+    return mask.clamp(0.0, 1.0)
+
+
 def load_global_prompt_lookup(csv_path: Path = GLOBAL_CSV_PATH) -> Dict[str, str]:
     if not csv_path.exists():
         return {}
@@ -227,7 +288,12 @@ class LocalAlignedFusedDataset(Dataset):
 
             crop = image.crop((left, top, right, bottom))
             crop_tensors.append(self.crop_transform(crop))
-            masks.append(make_soft_rect_mask(self.local_resolution, feather=self.mask_feather))
+            masks.append(make_bbox_soft_mask(
+                size=self.local_resolution,
+                bbox=sample["bbox"],
+                crop_box=(left, top, right, bottom),
+                feather=self.mask_feather,
+            ))
             boxes.append(torch.tensor([
                 round(left * scale_x),
                 round(top * scale_y),
@@ -418,7 +484,12 @@ class SinglePersonSamplingDataset(Dataset):
                     ethnicity_text=sample.get("ethnicity_raw", None),
                 ),
                 "bbox": bbox,
-                "mask": make_soft_rect_mask(self.local_resolution, feather=self.mask_feather),
+                "mask": make_bbox_soft_mask(
+                    size=self.local_resolution,
+                    bbox=sample["bbox"],
+                    crop_box=(left, top, right, bottom),
+                    feather=self.mask_feather,
+                ),
                 "target_score": target_score / 100.0,
             })
 

@@ -37,7 +37,10 @@ def fuse_global_local_outputs(
 
     # Residual fusion parameters.
     residual_alpha: float = 0.35,
+    residual_alpha_inside_local: Optional[float] = None,
+    residual_alpha_outside_local: Optional[float] = None,
     residual_sigma: float = 9.0,
+    local_union_blur_sigma: float = 7.0,
     use_face_mask: bool = True,
     face_mask_blur_sigma: float = 3.0,
 
@@ -96,7 +99,10 @@ def fuse_global_local_outputs(
         print("Mode                 :", "model" if fusion_bundle is not None else "deterministic")
         print("Device               :", device)
         print("Residual alpha       :", residual_alpha)
+        print("Residual alpha local :", residual_alpha_inside_local)
+        print("Residual alpha outer :", residual_alpha_outside_local)
         print("Residual sigma       :", residual_sigma)
+        print("Local union sigma    :", local_union_blur_sigma)
         print("Use face mask        :", use_face_mask)
         print("Local crops          :", len(local_outputs) if local_outputs is not None else 0)
         print("Local insert α       :", local_insert_alpha)
@@ -141,9 +147,13 @@ def fuse_global_local_outputs(
         residual_pack = compute_low_frequency_global_residual_fusion(
             x_orig=x_orig_t,
             x_global=x_global_t,
+            local_outputs=local_outputs,
             face_mask=face_mask_t,
             residual_alpha=residual_alpha,
+            residual_alpha_inside_local=residual_alpha_inside_local,
+            residual_alpha_outside_local=residual_alpha_outside_local,
             residual_sigma=residual_sigma,
+            local_union_blur_sigma=local_union_blur_sigma,
             face_mask_blur_sigma=face_mask_blur_sigma,
             use_face_mask=use_face_mask)
 
@@ -161,10 +171,16 @@ def fuse_global_local_outputs(
             color_match_strength=color_match_strength)
 
         # --------------------------------------------------------
-        # Optional low-strength refiner.
+        # Deterministic final, before optional low-strength refiner.
         # --------------------------------------------------------
-        x_final = apply_fusion_refiner_if_available(
-            x_blend=x_blend,
+        x_final = x_blend.clamp(0, 1)
+
+        # --------------------------------------------------------
+        # Optional low-strength refiner. Kept separate from x_final so
+        # grids can show what deterministic fusion did before refinement.
+        # --------------------------------------------------------
+        x_refined = apply_fusion_refiner_if_available(
+            x_blend=x_final,
             fusion_bundle=fusion_bundle,
             prompt=fusion_prompt,
             negative_prompt=fusion_negative_prompt,
@@ -175,7 +191,7 @@ def fuse_global_local_outputs(
             device=device,
         )
 
-        x_final = x_final.clamp(0, 1)
+        x_refined = x_refined.clamp(0, 1)
 
     out = {
         "mode": "model" if fusion_bundle is not None else "deterministic",
@@ -185,10 +201,13 @@ def fuse_global_local_outputs(
         "x_coarse": x_coarse.detach().cpu(),
         "x_blend": x_blend.detach().cpu(),
         "x_final": x_final.detach().cpu(),
+        "x_refined": x_refined.detach().cpu(),
 
         "residual_raw": residual_pack["residual_raw"].detach().cpu(),
         "residual_low": residual_pack["residual_low"].detach().cpu(),
         "face_mask": residual_pack["face_mask"].detach().cpu(),
+        "local_union_mask": residual_pack["local_union_mask"].detach().cpu(),
+        "alpha_map": residual_pack["alpha_map"].detach().cpu(),
 
         "local_outputs": local_outputs,
         "fusion_model_config": None
@@ -205,7 +224,11 @@ def fuse_global_local_outputs(
             "x_final": tensor01_to_pil(out["x_final"]),
             "residual_raw_vis": tensor01_to_pil((out["residual_raw"] * 0.5 + 0.5).clamp(0, 1)),
             "residual_low_vis": tensor01_to_pil((out["residual_low"] * 0.5 + 0.5).clamp(0, 1)),
+            "local_union_mask_vis": tensor01_to_pil(out["local_union_mask"].repeat(1, 3, 1, 1).clamp(0, 1)),
+            "alpha_map_vis": tensor01_to_pil((out["alpha_map"] / out["alpha_map"].max().clamp_min(1e-6)).repeat(1, 3, 1, 1).clamp(0, 1)),
         }
+        if fusion_bundle is not None:
+            out["pil"]["x_refined"] = tensor01_to_pil(out["x_refined"])
 
     if offload_fusion_after:
         offload_fusion_bundle(fusion_bundle)
@@ -216,7 +239,7 @@ def fuse_global_local_outputs(
 
     if verbose:
         print("Fusion finished")
-        print("Returned: x_orig | x_global | x_coarse | x_blend | x_final | residuals")
+        print("Returned: x_orig | x_global | x_coarse | x_blend | x_final | x_refined | residuals")
         print("═" * 110)
 
     return out

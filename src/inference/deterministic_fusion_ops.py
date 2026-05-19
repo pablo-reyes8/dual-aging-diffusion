@@ -15,12 +15,113 @@ from src.inference.image_tensor_utils import (
 # Residual global fusion
 # ============================================================
 
+def _coerce_bbox_xyxy(
+    bbox: Any,
+    *,
+    height: int,
+    width: int,
+) -> Tuple[int, int, int, int]:
+    if torch.is_tensor(bbox):
+        values = bbox.detach().cpu().flatten().tolist()
+    else:
+        values = list(bbox)
+
+    if len(values) != 4:
+        raise ValueError(f"bbox must contain 4 values, got {bbox}")
+
+    x1, y1, x2, y2 = [int(round(float(v))) for v in values]
+    x1 = max(0, min(width - 1, x1))
+    x2 = max(x1 + 1, min(width, x2))
+    y1 = max(0, min(height - 1, y1))
+    y2 = max(y1 + 1, min(height, y2))
+    return x1, y1, x2, y2
+
+
+def build_local_union_mask(
+    local_outputs: Optional[Sequence[Dict[str, Any]]],
+    *,
+    height: int,
+    width: int,
+    device: torch.device,
+    dtype: torch.dtype,
+    blur_sigma: float = 7.0,
+) -> torch.Tensor:
+    """
+    Builds a soft full-image mask for areas covered by local crop outputs.
+
+    White means the local branch owns that region, so the global residual
+    should be trusted less there. Black means no local crop covers the area.
+    """
+    mask = torch.zeros((1, 1, height, width), device=device, dtype=dtype)
+
+    if local_outputs is None:
+        return mask
+
+    for item in local_outputs:
+        if "bbox" not in item:
+            continue
+
+        x1, y1, x2, y2 = _coerce_bbox_xyxy(
+            item["bbox"],
+            height=height,
+            width=width,
+        )
+        crop_h = y2 - y1
+        crop_w = x2 - x1
+
+        local_mask = item.get("mask", None)
+        if local_mask is None:
+            patch = torch.ones((1, 1, crop_h, crop_w), device=device, dtype=dtype)
+        else:
+            patch = normalize_mask01(local_mask, device=device, dtype=dtype)
+            if patch.shape[-2:] != (crop_h, crop_w):
+                patch = resize_tensor_image(patch, size_hw=(crop_h, crop_w))
+
+        patch = patch.clamp(0, 1)
+        mask[:, :, y1:y2, x1:x2] = torch.maximum(
+            mask[:, :, y1:y2, x1:x2],
+            patch,
+        )
+
+    if blur_sigma is not None and blur_sigma > 0:
+        mask = gaussian_blur_tensor(mask, sigma=blur_sigma)
+
+    return mask.clamp(0, 1)
+
+
+def _resolve_spatial_residual_alphas(
+    residual_alpha: float,
+    residual_alpha_inside_local: Optional[float],
+    residual_alpha_outside_local: Optional[float],
+) -> Tuple[float, float]:
+    """
+    Backward-compatible defaults.
+
+    Existing callers still pass only residual_alpha. Internally we now trust the
+    global branch less inside local crops and a bit more outside them, but the
+    derived values stay conservative.
+    """
+    base = float(residual_alpha)
+
+    if residual_alpha_inside_local is None:
+        residual_alpha_inside_local = min(base * 0.60, 0.20)
+
+    if residual_alpha_outside_local is None:
+        residual_alpha_outside_local = min(base * 1.35, 0.55)
+
+    return float(residual_alpha_inside_local), float(residual_alpha_outside_local)
+
+
 def compute_low_frequency_global_residual_fusion(
     x_orig: torch.Tensor,
     x_global: torch.Tensor,
+    local_outputs: Optional[Sequence[Dict[str, Any]]] = None,
     face_mask: Optional[torch.Tensor] = None,
     residual_alpha: float = 0.35,
+    residual_alpha_inside_local: Optional[float] = None,
+    residual_alpha_outside_local: Optional[float] = None,
     residual_sigma: float = 9.0,
+    local_union_blur_sigma: float = 7.0,
     face_mask_blur_sigma: float = 3.0,
     use_face_mask: bool = True,
 ) -> Dict[str, torch.Tensor]:
@@ -29,7 +130,7 @@ def compute_low_frequency_global_residual_fusion(
 
         residual_raw = x_global - x_orig
         residual_low = GaussianBlur(residual_raw)
-        x_coarse = x_orig + alpha * M_face * residual_low
+        x_coarse = x_orig + alpha_map * M_face * residual_low
 
     This is deterministic and has 0 trainable parameters.
     """
@@ -55,7 +156,27 @@ def compute_low_frequency_global_residual_fusion(
 
         m = m.clamp(0, 1)
 
-    x_coarse = x_orig + float(residual_alpha) * m * residual_low
+    _, _, H, W = x_orig.shape
+    local_union_mask = build_local_union_mask(
+        local_outputs=local_outputs,
+        height=H,
+        width=W,
+        device=x_orig.device,
+        dtype=x_orig.dtype,
+        blur_sigma=float(local_union_blur_sigma),
+    )
+
+    alpha_inside, alpha_outside = _resolve_spatial_residual_alphas(
+        residual_alpha=residual_alpha,
+        residual_alpha_inside_local=residual_alpha_inside_local,
+        residual_alpha_outside_local=residual_alpha_outside_local,
+    )
+    alpha_map = (
+        alpha_inside * local_union_mask
+        + alpha_outside * (1.0 - local_union_mask)
+    ).to(device=x_orig.device, dtype=x_orig.dtype)
+
+    x_coarse = x_orig + alpha_map * m * residual_low
     x_coarse = x_coarse.clamp(0, 1)
 
     return {
@@ -63,6 +184,8 @@ def compute_low_frequency_global_residual_fusion(
         "residual_raw": residual_raw,
         "residual_low": residual_low,
         "face_mask": m,
+        "local_union_mask": local_union_mask,
+        "alpha_map": alpha_map,
     }
 
 

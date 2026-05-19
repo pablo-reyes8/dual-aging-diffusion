@@ -648,7 +648,8 @@ def save_monitoring_fusion_outputs(
     save_grid: bool = True,
 ) -> Dict[str, Path]:
     """
-    Saves x_orig, x_global, x_coarse, x_blend, x_final and residual visualizations.
+    Saves x_orig, x_global, x_coarse, x_blend, x_final, optional x_refined,
+    and residual/debug visualizations.
 
     Requires fuse_global_local_outputs(..., return_pil=True).
     """
@@ -671,8 +672,11 @@ def save_monitoring_fusion_outputs(
         "x_coarse",
         "x_blend",
         "x_final",
+        "x_refined",
         "residual_raw_vis",
         "residual_low_vis",
+        "local_union_mask_vis",
+        "alpha_map_vis",
     ]
 
     for key in keys:
@@ -686,6 +690,8 @@ def save_monitoring_fusion_outputs(
             from PIL import Image, ImageDraw
 
             grid_keys = ["x_orig", "x_global", "x_coarse", "x_blend", "x_final"]
+            if "x_refined" in pil_pack:
+                grid_keys.append("x_refined")
             images = [pil_pack[k].convert("RGB") for k in grid_keys if k in pil_pack and pil_pack[k] is not None]
 
             if len(images) > 0:

@@ -45,7 +45,10 @@ DEFAULT_INFERENCE_WRAPPER_CONFIG: Dict[str, Any] = {
     },
     "fusion": {
         "residual_alpha": 0.35,
+        "residual_alpha_inside_local": None,
+        "residual_alpha_outside_local": None,
         "residual_sigma": 9.0,
+        "local_union_blur_sigma": 7.0,
         "use_face_mask": True,
         "face_mask_blur_sigma": 3.0,
         "local_insert_alpha": 1.0,
@@ -227,9 +230,10 @@ def save_inference_wrapper_outputs(
         image.save(path)
         paths[key] = path
 
-    if "x_final" in fusion_out["pil"]:
+    final_key = "x_refined" if "x_refined" in fusion_out["pil"] else "x_final"
+    if final_key in fusion_out["pil"]:
         final_path = output_dir / "final.png"
-        fusion_out["pil"]["x_final"].save(final_path)
+        fusion_out["pil"][final_key].save(final_path)
         paths["final"] = final_path
 
     if save_grid:
@@ -237,6 +241,8 @@ def save_inference_wrapper_outputs(
             from PIL import Image, ImageDraw
 
             grid_keys = ["x_orig", "x_global", "x_coarse", "x_blend", "x_final"]
+            if "x_refined" in fusion_out["pil"]:
+                grid_keys.append("x_refined")
             images = [
                 fusion_out["pil"][key].convert("RGB")
                 for key in grid_keys
@@ -403,7 +409,10 @@ def run_sampling_objects_inference(
             face_mask=global_batch.get("face_mask", None),
             fusion_bundle=fusion_bundle,
             residual_alpha=float(fusion_cfg["residual_alpha"]),
+            residual_alpha_inside_local=fusion_cfg.get("residual_alpha_inside_local"),
+            residual_alpha_outside_local=fusion_cfg.get("residual_alpha_outside_local"),
             residual_sigma=float(fusion_cfg["residual_sigma"]),
+            local_union_blur_sigma=float(fusion_cfg["local_union_blur_sigma"]),
             use_face_mask=bool(fusion_cfg["use_face_mask"]),
             face_mask_blur_sigma=float(fusion_cfg["face_mask_blur_sigma"]),
             local_insert_alpha=float(fusion_cfg["local_insert_alpha"]),
