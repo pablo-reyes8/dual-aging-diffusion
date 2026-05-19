@@ -63,8 +63,9 @@ class LoRALinear(nn.Module):
 
     def forward(self, x):
         base_out = self.base_layer(x)
-        lora_out = self.lora_up(self.lora_down(self.dropout(x))) * self.scale
-        return base_out + lora_out
+        lora_x = self.dropout(x).to(dtype=self.lora_down.weight.dtype)
+        lora_out = self.lora_up(self.lora_down(lora_x)) * self.scale
+        return base_out + lora_out.to(dtype=base_out.dtype)
 
 
 def freeze_all_params(model):
@@ -147,11 +148,13 @@ def inject_manual_lora_unet(
             print(f"  ... {len(modules_to_replace) - 30} more")
 
     for name, module in modules_to_replace:
+        base_device = module.weight.device
+        base_dtype = module.weight.dtype
         lora_module = LoRALinear(
             base_layer=module,
             rank=rank,
             alpha=alpha,
-            dropout=dropout,).to(device=device, dtype=dtype)
+            dropout=dropout,).to(device=base_device, dtype=base_dtype)
 
         replace_module(unet, name, lora_module)
 

@@ -481,6 +481,83 @@ def backward_with_optional_scaler(
         loss.backward(retain_graph=retain_graph)
 
 
+def nonfinite_gradient_details(parameters, max_items: int = 8) -> str:
+    """
+    Returns a compact diagnostic for parameters with NaN/Inf gradients.
+    """
+    if parameters is None:
+        return "parameters=None"
+
+    details = []
+    for idx, p in enumerate(parameters):
+        if p.grad is None:
+            continue
+
+        grad = p.grad.detach()
+        if grad.numel() == 0 or torch.isfinite(grad).all():
+            continue
+
+        nonfinite = (~torch.isfinite(grad)).sum().item()
+        details.append(
+            f"param_idx={idx} shape={tuple(p.shape)} grad_nonfinite={int(nonfinite)}"
+        )
+
+        if len(details) >= int(max_items):
+            break
+
+    return "; ".join(details) if details else "no non-finite gradients found"
+
+
+def nonfinite_parameter_details(parameters, max_items: int = 8) -> str:
+    """
+    Returns a compact diagnostic for parameters containing NaN/Inf values.
+    """
+    if parameters is None:
+        return "parameters=None"
+
+    details = []
+    for idx, p in enumerate(parameters):
+        data = p.detach()
+        if data.numel() == 0 or torch.isfinite(data).all():
+            continue
+
+        nonfinite = (~torch.isfinite(data)).sum().item()
+        details.append(
+            f"param_idx={idx} shape={tuple(p.shape)} dtype={p.dtype} param_nonfinite={int(nonfinite)}"
+        )
+
+        if len(details) >= int(max_items):
+            break
+
+    return "; ".join(details) if details else "no non-finite parameters found"
+
+
+def ensure_trainable_parameters_fp32(parameters, verbose: bool = False) -> int:
+    """
+    Casts trainable optimizer parameters to fp32 in-place.
+
+    This is important for LoRA/DoRA adapters trained with AdamW under AMP:
+    compute can run in bf16/fp16, but optimizer-owned trainable weights should
+    be stored in fp32.
+    """
+    if parameters is None:
+        return 0
+
+    converted = 0
+    for p in parameters:
+        if p.dtype == torch.float32:
+            continue
+        p.data = p.data.float()
+        if p.grad is not None:
+            p.grad.data = p.grad.data.float()
+        converted += 1
+
+    if verbose and converted > 0:
+        print(f"[AMP safety] Converted {converted} trainable tensors to fp32.")
+
+    return converted
+
+
 def optimizer_step_with_optional_scaler(
     optimizer: torch.optim.Optimizer,
     scaler=None,
@@ -514,6 +591,27 @@ def optimizer_step_with_optional_scaler(
                 return True
         return False
 
+    def _has_nonfinite_param() -> bool:
+        if params is None:
+            return False
+        for p in params:
+            if not torch.isfinite(p.detach()).all():
+                return True
+        return False
+
+    def _snapshot_params():
+        if params is None:
+            return None
+        return [p.detach().clone() for p in params]
+
+    def _restore_params_and_clear_state(snapshot) -> None:
+        if params is None or snapshot is None:
+            return
+        for p, old_value in zip(params, snapshot):
+            p.data.copy_(old_value.to(device=p.device, dtype=p.dtype))
+            if p in optimizer.state:
+                optimizer.state[p].clear()
+
     if scaler is not None:
         if params is not None:
             scaler.unscale_(optimizer)
@@ -528,8 +626,12 @@ def optimizer_step_with_optional_scaler(
                 scaler.update()
                 return False
 
+        snapshot = _snapshot_params() if skip_nonfinite_grad else None
         scaler.step(optimizer)
         scaler.update()
+        if skip_nonfinite_grad and _has_nonfinite_param():
+            _restore_params_and_clear_state(snapshot)
+            return False
         return True
 
     else:
@@ -541,5 +643,9 @@ def optimizer_step_with_optional_scaler(
             if skip_nonfinite_grad and not torch.isfinite(total_norm.detach()):
                 return False
 
+        snapshot = _snapshot_params() if skip_nonfinite_grad else None
         optimizer.step()
+        if skip_nonfinite_grad and _has_nonfinite_param():
+            _restore_params_and_clear_state(snapshot)
+            return False
         return True

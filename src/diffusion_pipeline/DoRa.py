@@ -213,12 +213,14 @@ def inject_manual_dora_unet(
             print(f"  ... {len(modules_to_replace) - 30} more")
 
     for name, module in modules_to_replace:
+        base_device = module.weight.device
+        base_dtype = module.weight.dtype
         dora_module = DoRALinear(
             base_layer=module,
             rank=rank,
             alpha=alpha,
             dropout=dropout,
-        ).to(device=device, dtype=dtype)
+        ).to(device=base_device, dtype=base_dtype)
 
         replace_module(unet, name, dora_module)
 

@@ -360,6 +360,7 @@ def train_one_epoch_global(
     set_global_bundle_train_mode(global_bundle)
 
     trainable_params = get_global_trainable_parameters_from_bundle(global_bundle)
+    ensure_trainable_parameters_fp32(trainable_params, verbose=verbose)
 
     if len(trainable_params) == 0:
         raise ValueError("No trainable parameters found in global_bundle['unet'].")
@@ -502,12 +503,12 @@ def train_one_epoch_global(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite global source loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(loss_out_source)}"
-                    )
+                print(
+                    "[WARN] Non-finite GLOBAL source loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='global', batch_idx=batch_idx, global_step=global_step, loss_mode='diff/source', batch=batch, prompt_pack=global_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Components: {nonfinite_loss_details(loss_out_source)}"
+                )
 
                 continue
 
@@ -550,12 +551,12 @@ def train_one_epoch_global(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite global neutral loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(loss_out_neutral)}"
-                    )
+                print(
+                    "[WARN] Non-finite GLOBAL neutral loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='global', batch_idx=batch_idx, global_step=global_step, loss_mode='diff/neutral', batch=batch, prompt_pack=global_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Components: {nonfinite_loss_details(loss_out_neutral)}"
+                )
 
                 continue
 
@@ -619,12 +620,12 @@ def train_one_epoch_global(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite global loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(loss_out)}"
-                    )
+                print(
+                    "[WARN] Non-finite GLOBAL loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='global', batch_idx=batch_idx, global_step=global_step, loss_mode=loss_mode, batch=batch, prompt_pack=global_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Components: {nonfinite_loss_details(loss_out)}"
+                )
 
                 continue
 
@@ -689,11 +690,13 @@ def train_one_epoch_global(
             if not step_applied:
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite global gradients at batch_idx={batch_idx}. "
-                        "Skipping optimizer step."
-                    )
+                print(
+                    "[WARN] Non-finite GLOBAL gradients. "
+                    "Skipping optimizer step. "
+                    f"{training_batch_diagnostic_context(branch='global', batch_idx=batch_idx, global_step=global_step, loss_mode=loss_mode, batch=batch, prompt_pack=global_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Gradients: {nonfinite_gradient_details(trainable_params)} | "
+                    f"Parameters: {nonfinite_parameter_details(trainable_params)}"
+                )
                 continue
 
             if step_scheduler and scheduler is not None:

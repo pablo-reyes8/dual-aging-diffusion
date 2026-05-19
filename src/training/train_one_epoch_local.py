@@ -264,6 +264,67 @@ def nonfinite_loss_details(loss_out: Dict[str, Any], max_items: int = 8) -> str:
     return "; ".join(details) if details else "no non-finite tensor components found"
 
 
+def _tensor_range_text(name: str, value: Any) -> Optional[str]:
+    if not torch.is_tensor(value):
+        return None
+    if value.numel() == 0:
+        return f"{name}=empty"
+
+    x = value.detach().float()
+    finite = torch.isfinite(x)
+    finite_count = int(finite.sum().item())
+    nonfinite_count = int((~finite).sum().item())
+
+    if finite_count == 0:
+        return f"{name}: shape={tuple(value.shape)} all_nonfinite={nonfinite_count}"
+
+    finite_x = x[finite]
+    return (
+        f"{name}: shape={tuple(value.shape)} "
+        f"min={finite_x.min().item():.6g} "
+        f"max={finite_x.max().item():.6g} "
+        f"mean={finite_x.mean().item():.6g} "
+        f"nonfinite={nonfinite_count}"
+    )
+
+
+def training_batch_diagnostic_context(
+    *,
+    branch: str,
+    batch_idx: int,
+    global_step: int,
+    loss_mode: str,
+    batch: Dict[str, Any],
+    prompt_pack: Optional[Dict[str, Any]] = None,
+    use_double_prompt: Optional[bool] = None,
+) -> str:
+    """
+    Compact always-on context for NaN/Inf diagnostics.
+    """
+    parts = [
+        f"branch={branch}",
+        f"batch_idx={batch_idx}",
+        f"global_step={global_step}",
+        f"loss_mode={loss_mode}",
+    ]
+
+    if use_double_prompt is not None:
+        parts.append(f"double_prompt={bool(use_double_prompt)}")
+
+    for key in ["pixel_values", "score", "score_raw", "age", "age_norm"]:
+        text = _tensor_range_text(key, batch.get(key, None))
+        if text is not None:
+            parts.append(text)
+
+    if prompt_pack is not None:
+        for key in ["target_scores", "target_scores_raw", "target_ages"]:
+            text = _tensor_range_text(f"prompt_pack.{key}", prompt_pack.get(key, None))
+            if text is not None:
+                parts.append(text)
+
+    return " | ".join(parts)
+
+
 def _flatten_nested_prompts(prompts: List[List[str]], valid_mask: torch.Tensor) -> List[str]:
     out: List[str] = []
     valid_cpu = valid_mask.detach().cpu()
@@ -476,6 +537,7 @@ def train_one_epoch_local(
     set_local_bundle_train_mode(local_bundle)
 
     trainable_params = get_trainable_parameters_from_bundle(local_bundle)
+    ensure_trainable_parameters_fp32(trainable_params, verbose=verbose)
 
     if len(trainable_params) == 0:
         raise ValueError("No trainable parameters found in local_bundle['unet'].")
@@ -632,12 +694,12 @@ def train_one_epoch_local(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite source loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(loss_out_source)}"
-                    )
+                print(
+                    "[WARN] Non-finite LOCAL source loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='local', batch_idx=batch_idx, global_step=global_step, loss_mode='full/source', batch=batch, prompt_pack=local_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Components: {nonfinite_loss_details(loss_out_source)}"
+                )
 
                 continue
 
@@ -682,12 +744,12 @@ def train_one_epoch_local(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite neutral loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(loss_out_neutral)}"
-                    )
+                print(
+                    "[WARN] Non-finite LOCAL neutral loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='local', batch_idx=batch_idx, global_step=global_step, loss_mode='full/neutral', batch=batch, prompt_pack=local_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Components: {nonfinite_loss_details(loss_out_neutral)}"
+                )
 
                 continue
 
@@ -750,12 +812,12 @@ def train_one_epoch_local(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite local loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(loss_out)}"
-                    )
+                print(
+                    "[WARN] Non-finite LOCAL loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='local', batch_idx=batch_idx, global_step=global_step, loss_mode=loss_mode, batch=batch, prompt_pack=local_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Components: {nonfinite_loss_details(loss_out)}"
+                )
 
                 continue
 
@@ -833,12 +895,12 @@ def train_one_epoch_local(
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite fused local loss at batch_idx={batch_idx}. "
-                        "Skipping accumulated gradients. "
-                        f"Components: {nonfinite_loss_details(fused_out)}"
-                    )
+                print(
+                    "[WARN] Non-finite LOCAL fused loss. "
+                    "Skipping accumulated gradients. "
+                    f"{training_batch_diagnostic_context(branch='local_fused', batch_idx=batch_idx, global_step=global_step, loss_mode='fused', batch=fused_batch, prompt_pack=None, use_double_prompt=False)} | "
+                    f"Components: {nonfinite_loss_details(fused_out)}"
+                )
 
                 continue
 
@@ -917,11 +979,13 @@ def train_one_epoch_local(
             if not step_applied:
                 skipped_steps += 1
                 optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
-                if verbose:
-                    print(
-                        f"[WARN] Non-finite local gradients at batch_idx={batch_idx}. "
-                        "Skipping optimizer step."
-                    )
+                print(
+                    "[WARN] Non-finite LOCAL gradients. "
+                    "Skipping optimizer step. "
+                    f"{training_batch_diagnostic_context(branch='local', batch_idx=batch_idx, global_step=global_step, loss_mode=loss_mode, batch=batch, prompt_pack=local_prompt_pack, use_double_prompt=use_double_prompt)} | "
+                    f"Gradients: {nonfinite_gradient_details(trainable_params)} | "
+                    f"Parameters: {nonfinite_parameter_details(trainable_params)}"
+                )
                 continue
 
             if step_scheduler and scheduler is not None:

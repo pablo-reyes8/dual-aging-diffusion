@@ -102,6 +102,37 @@ def get_trainable_params_and_names(model):
     return params, names
 
 
+def cast_trainable_parameters_to_fp32(model, verbose=True):
+    """
+    Keeps adapter parameters in fp32 for optimizer stability.
+
+    The base UNet can stay fp16/bf16 and autocast still controls compute, but
+    AdamW should not update LoRA/DoRA weights stored in fp16.
+    """
+    converted = 0
+    already_fp32 = 0
+
+    for _, p in model.named_parameters():
+        if not p.requires_grad:
+            continue
+        if p.dtype == torch.float32:
+            already_fp32 += 1
+            continue
+        p.data = p.data.float()
+        if p.grad is not None:
+            p.grad.data = p.grad.data.float()
+        converted += 1
+
+    if verbose:
+        print(
+            "[Adapter dtype] trainable params fp32:",
+            f"converted={converted}",
+            f"already_fp32={already_fp32}",
+        )
+
+    return model
+
+
 # ============================================================
 # FREEZE UTILITIES
 # ============================================================
@@ -490,6 +521,8 @@ def apply_adapter_to_existing_bundle(
         bundle["unet"].train()
     else:
         bundle["unet"].eval()
+
+    cast_trainable_parameters_to_fp32(bundle["unet"], verbose=verbose)
 
     bundle["adapter_type"] = adapter_type
     bundle["adapter_config"] = {
