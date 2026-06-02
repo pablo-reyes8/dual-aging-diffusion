@@ -294,4 +294,4 @@ The global branch depends on external FFHQ-derived data paths. The repository-lo
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Under MIT License. See [LICENSE](LICENSE).
