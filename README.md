@@ -2,7 +2,7 @@
   <img src="assets\header_image.png" width="1000"/>
 </p>
 
-# Diffusion Aging
+# Dual Diffusion Aging...
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)
@@ -294,4 +294,4 @@ The global branch depends on external FFHQ-derived data paths. The repository-lo
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Under MIT License. See [LICENSE](LICENSE).
