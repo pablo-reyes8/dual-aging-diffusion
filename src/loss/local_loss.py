@@ -37,6 +37,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from src.loss.ddim_generation import ddim_generate_images
+from src.loss.directional_score_loss import DirectionalScoreLoss
+
 
 class LDLALocalAgingLoss(nn.Module):
     def __init__(
@@ -53,13 +56,69 @@ class LDLALocalAgingLoss(nn.Module):
         score_timestep_min: int = 20,
         score_timestep_max: int = 400,
 
+        # ----------------------------------------------------------------
+        # Score-edit generation mode (Error 1 fix), mirrors the global loss.
+        #   "1_step_per_loss": original single-step x0_hat (cheap, blurry).
+        #   "full_ddim":       short DDIM trajectory -> sharper crop for the
+        #                      frozen ScoreNet. Use a low full_ddim_max_timestep.
+        # ----------------------------------------------------------------
+        score_loss_mode: str = "1_step_per_loss",
+        full_ddim_num_steps: int = 10,
+        full_ddim_max_timestep: int = 120,
+
+        # Min-SNR-gamma reweighting of the full/zone diffusion losses.
+        # Off by default (baseline unchanged).
+        use_min_snr: bool = False,
+        min_snr_gamma: float = 5.0,
+
+        # ----------------------------------------------------------------
+        # Directional / contrastive score loss (Error 3). Off by default.
+        # Teaches controllability ("more score token -> more aging") in a way
+        # robust to the absolute ScoreNet bias. Activated from the wrapper.
+        # ----------------------------------------------------------------
+        use_directional_score: bool = False,
+        lambda_direction: float = 0.0,
+        direction_margin: float = 0.05,
+        direction_high_score: float = 0.90,
+        direction_low_score: float = 0.30,
+        direction_timestep_min: int = 20,
+        direction_timestep_max: int = 200,
+
         unet_dtype: Optional[torch.dtype] = None):
 
         super().__init__()
 
+        valid_score_modes = {"1_step_per_loss", "full_ddim"}
+        score_loss_mode = str(score_loss_mode).lower().strip()
+        if score_loss_mode not in valid_score_modes:
+            raise ValueError(
+                f"Invalid score_loss_mode='{score_loss_mode}'. "
+                f"Valid: {sorted(valid_score_modes)}"
+            )
+
         self.local_bundle = local_bundle
         self.score_timestep_min = int(score_timestep_min)
         self.score_timestep_max = int(score_timestep_max)
+
+        self.score_loss_mode = score_loss_mode
+        self.full_ddim_num_steps = int(full_ddim_num_steps)
+        self.full_ddim_max_timestep = int(full_ddim_max_timestep)
+        self.use_min_snr = bool(use_min_snr)
+        self.min_snr_gamma = float(min_snr_gamma)
+
+        self.use_directional_score = bool(use_directional_score)
+        self.lambda_direction = float(lambda_direction)
+
+        if self.use_directional_score and self.lambda_direction > 0.0:
+            self.directional_loss = DirectionalScoreLoss(
+                margin=direction_margin,
+                high_score=direction_high_score,
+                low_score=direction_low_score,
+                timestep_min=direction_timestep_min,
+                timestep_max=direction_timestep_max,
+            )
+        else:
+            self.directional_loss = None
         self.vae = local_bundle["vae"]
         self.unet = local_bundle["unet"]
         self.tokenizer = local_bundle["tokenizer"]
@@ -104,6 +163,11 @@ class LDLALocalAgingLoss(nn.Module):
         # Safety checks.
         if self.lambda_score > 0 and self.score_net is None:
             raise ValueError("lambda_score > 0 but score_net is None.")
+
+        if self.directional_loss is not None and self.score_net is None:
+            raise ValueError(
+                "use_directional_score=True with lambda_direction>0 but score_net is None."
+            )
 
         if self.lambda_cycle > 0:
             print(
@@ -256,6 +320,21 @@ class LDLALocalAgingLoss(nn.Module):
     # Individual losses
     # --------------------------------------------------------
 
+    def min_snr_weight(self, timesteps: torch.Tensor) -> torch.Tensor:
+        """
+        Min-SNR-gamma weight for epsilon-prediction:
+            w(t) = min(SNR(t), gamma) / SNR(t),  SNR = alpha_bar / (1 - alpha_bar)
+        Returns [B].
+        """
+        alphas_cumprod = self.scheduler.alphas_cumprod.to(
+            device=self.device,
+            dtype=torch.float32,
+        )
+        ab = alphas_cumprod[timesteps].float().clamp(1e-8, 1.0 - 1e-8)
+        snr = ab / (1.0 - ab)
+        w = torch.clamp(snr, max=self.min_snr_gamma) / snr
+        return w.view(-1)
+
     def diffusion_prompt_loss(
         self,
         latents: torch.Tensor,
@@ -266,6 +345,8 @@ class LDLALocalAgingLoss(nn.Module):
 
         """
         Standard diffusion noise-prediction loss for one prompt type.
+
+        Optionally reweighted with Min-SNR-gamma (use_min_snr=True).
         """
         encoder_hidden_states = self.encode_prompts(prompts)
 
@@ -274,7 +355,12 @@ class LDLALocalAgingLoss(nn.Module):
             timesteps=timesteps,
             encoder_hidden_states=encoder_hidden_states)
 
-        loss = F.mse_loss(noise_pred.float(), noise.float())
+        if self.use_min_snr:
+            per_sample = (noise_pred.float() - noise.float()).pow(2).mean(dim=[1, 2, 3])
+            weights = self.min_snr_weight(timesteps)
+            loss = (weights * per_sample).mean()
+        else:
+            loss = F.mse_loss(noise_pred.float(), noise.float())
 
         return loss, noise_pred
 
@@ -313,6 +399,102 @@ class LDLALocalAgingLoss(nn.Module):
         loss_score = F.mse_loss(score_pred.float(), target_scores.float())
 
         return loss_score, score_pred, decoded_crop
+
+    def generate_edited_crop_images(
+        self,
+        z0: torch.Tensor,
+        prompts: List[str],
+        timestep_min: int,
+        timestep_max: int,
+        noise: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """
+        Generates edited crops conditioned on `prompts`, in [-1, 1].
+
+        Mode-aware (Error 1):
+            "full_ddim":       short DDIM trajectory -> sharper crop.
+            "1_step_per_loss": single-step x0_hat estimate (blurry).
+
+        Used by both the score loss and the directional score loss. When `noise`
+        is provided (1-step mode), it is shared across calls so directional
+        high/low edits differ only by the prompt.
+        """
+        if self.score_loss_mode == "full_ddim":
+            return ddim_generate_images(
+                self,
+                z0=z0,
+                prompts=prompts,
+                num_steps=self.full_ddim_num_steps,
+                max_timestep=self.full_ddim_max_timestep,
+                noise=noise,
+            )
+
+        B = z0.shape[0]
+        if noise is None:
+            noise = torch.randn_like(z0)
+
+        timesteps = torch.randint(
+            low=int(timestep_min),
+            high=int(timestep_max) + 1,
+            size=(B,),
+            device=self.device,
+        ).long()
+
+        zt = self.add_noise(z0, noise, timesteps)
+        hidden = self.encode_prompts(prompts)
+        noise_pred = self.predict_noise(
+            noisy_latents=zt,
+            timesteps=timesteps,
+            encoder_hidden_states=hidden,
+        )
+        x0_hat = self.predict_x0_from_noise(
+            noisy_latents=zt,
+            timesteps=timesteps,
+            noise_pred=noise_pred,
+        )
+        return self.decode_latents_to_images(x0_hat)
+
+    def directional_score_loss_fn(
+        self,
+        z0: torch.Tensor,
+        high_prompts: List[str],
+        low_prompts: List[str],
+    ):
+        """
+        Relative/contrastive score loss (Error 3).
+
+        Generates two edits of the SAME crop sharing the same noise but with a
+        high-score and a low-score prompt, then requires ScoreNet to rank the
+        high edit as more aged than the low edit by a margin. Robust to the
+        absolute ScoreNet bias on VAE-decoded crops.
+        """
+        shared_noise = torch.randn_like(z0)
+
+        imgs_high = self.generate_edited_crop_images(
+            z0=z0,
+            prompts=high_prompts,
+            timestep_min=self.directional_loss.timestep_min,
+            timestep_max=self.directional_loss.timestep_max,
+            noise=shared_noise,
+        )
+        imgs_low = self.generate_edited_crop_images(
+            z0=z0,
+            prompts=low_prompts,
+            timestep_min=self.directional_loss.timestep_min,
+            timestep_max=self.directional_loss.timestep_max,
+            noise=shared_noise,
+        )
+
+        with torch.amp.autocast(device_type=self.device.type, enabled=False):
+            s_high = self.score_net(
+                imgs_high.to(self.score_net_input_dtype).float()
+            ).view(-1)
+            s_low = self.score_net(
+                imgs_low.to(self.score_net_input_dtype).float()
+            ).view(-1)
+
+        loss_dir = self.directional_loss(score_high=s_high, score_low=s_low)
+        return loss_dir, s_high, s_low
 
     def latent_cycle_loss(
         self,
@@ -398,6 +580,11 @@ class LDLALocalAgingLoss(nn.Module):
         target_prompts: Optional[List[str]] = None,
         target_scores: Optional[torch.Tensor] = None,
 
+        # Directional/contrastive score loss prompts (Error 3). Built in the
+        # local training chunk from the base prompt with high/low score tokens.
+        direction_high_prompts: Optional[List[str]] = None,
+        direction_low_prompts: Optional[List[str]] = None,
+
         return_decoded_score_image: bool = False) -> Dict[str, Any]:
 
         """
@@ -450,6 +637,7 @@ class LDLALocalAgingLoss(nn.Module):
             "zone",
             "score",
             "cycle",
+            "direction",
             "full_zone",
             "full_score",
             "score_zone",
@@ -464,12 +652,18 @@ class LDLALocalAgingLoss(nn.Module):
         compute_zone = loss_mode in {"zone", "full_zone", "score_zone", "all"}
         compute_score = loss_mode in {"score", "full_score", "score_zone", "all"}
         compute_cycle = loss_mode in {"cycle", "all"}
+        compute_direction = loss_mode in {"direction", "all"}
 
         # Respect lambdas too.
         compute_full = compute_full and (self.lambda_full > 0.0)
         compute_zone = compute_zone and (self.lambda_zone > 0.0)
         compute_score = compute_score and (self.lambda_score > 0.0)
         compute_cycle = compute_cycle and (self.lambda_cycle > 0.0)
+        compute_direction = (
+            compute_direction
+            and self.directional_loss is not None
+            and self.lambda_direction > 0.0
+        )
 
         # --------------------------------------------------------
         # Inputs
@@ -542,6 +736,21 @@ class LDLALocalAgingLoss(nn.Module):
             target_scores = None
 
         # --------------------------------------------------------
+        # Directional prompt checks
+        # --------------------------------------------------------
+        if compute_direction:
+            if direction_high_prompts is None or direction_low_prompts is None:
+                raise ValueError(
+                    "direction_high_prompts and direction_low_prompts must be "
+                    "passed when loss_mode requires the directional score loss."
+                )
+            if len(direction_high_prompts) != B or len(direction_low_prompts) != B:
+                raise ValueError(
+                    "direction_high_prompts/direction_low_prompts length must equal "
+                    f"batch size={B}."
+                )
+
+        # --------------------------------------------------------
         # Encode source crop to latent z0
         # --------------------------------------------------------
         # z0: [B, 4, 32, 32] for 256x256 crops.
@@ -554,6 +763,7 @@ class LDLALocalAgingLoss(nn.Module):
         loss_zone = torch.zeros((), device=self.device)
         loss_score = torch.zeros((), device=self.device)
         loss_cycle = torch.zeros((), device=self.device)
+        loss_direction = torch.zeros((), device=self.device)
 
         noise_pred_full = None
         noise_pred_zone = None
@@ -562,6 +772,9 @@ class LDLALocalAgingLoss(nn.Module):
         score_pred = None
         decoded_score_image = None
         x0_hat_target_latents = None
+
+        direction_score_high = None
+        direction_score_low = None
 
         timesteps_full_zone = None
         timesteps_score = None
@@ -613,38 +826,68 @@ class LDLALocalAgingLoss(nn.Module):
                     "self.score_timestep_max is missing. Add it in __init__."
                 )
 
-            noise_score = torch.randn_like(z0)
+            if self.score_loss_mode == "full_ddim":
+                # Sharper edited crop via short DDIM trajectory, then ScoreNet.
+                decoded_score_image = self.generate_edited_crop_images(
+                    z0=z0,
+                    prompts=target_prompts,
+                    timestep_min=self.score_timestep_min,
+                    timestep_max=self.score_timestep_max,
+                )
+                decoded_for_score = decoded_score_image.to(
+                    device=self.device, dtype=self.score_net_input_dtype
+                )
+                tgt = target_scores.to(
+                    device=self.device, dtype=self.score_net_input_dtype
+                ).view(-1)
+                with torch.amp.autocast(device_type=self.device.type, enabled=False):
+                    score_pred = self.score_net(decoded_for_score.float()).view(-1)
+                loss_score = F.mse_loss(score_pred.float(), tgt.float())
+            else:
+                noise_score = torch.randn_like(z0)
 
-            timesteps_score = torch.randint(
-                low=int(self.score_timestep_min),
-                high=int(self.score_timestep_max) + 1,
-                size=(B,),
-                device=self.device,
-            ).long()
+                timesteps_score = torch.randint(
+                    low=int(self.score_timestep_min),
+                    high=int(self.score_timestep_max) + 1,
+                    size=(B,),
+                    device=self.device,
+                ).long()
 
-            zt_score = self.add_noise(
-                latents=z0,
-                noise=noise_score,
-                timesteps=timesteps_score,
-            )
+                zt_score = self.add_noise(
+                    latents=z0,
+                    noise=noise_score,
+                    timesteps=timesteps_score,
+                )
 
-            target_hidden = self.encode_prompts(target_prompts)
+                target_hidden = self.encode_prompts(target_prompts)
 
-            noise_pred_target = self.predict_noise(
-                noisy_latents=zt_score,
-                timesteps=timesteps_score,
-                encoder_hidden_states=target_hidden,
-            )
+                noise_pred_target = self.predict_noise(
+                    noisy_latents=zt_score,
+                    timesteps=timesteps_score,
+                    encoder_hidden_states=target_hidden,
+                )
 
-            x0_hat_target_latents = self.predict_x0_from_noise(
-                noisy_latents=zt_score,
-                timesteps=timesteps_score,
-                noise_pred=noise_pred_target,
-            )
+                x0_hat_target_latents = self.predict_x0_from_noise(
+                    noisy_latents=zt_score,
+                    timesteps=timesteps_score,
+                    noise_pred=noise_pred_target,
+                )
 
-            loss_score, score_pred, decoded_score_image = self.score_loss_from_x0_hat(
-                x0_hat_latents=x0_hat_target_latents,
-                target_scores=target_scores,
+                loss_score, score_pred, decoded_score_image = self.score_loss_from_x0_hat(
+                    x0_hat_latents=x0_hat_target_latents,
+                    target_scores=target_scores,
+                )
+
+        # --------------------------------------------------------
+        # L_direction (relative / contrastive score loss)
+        # --------------------------------------------------------
+        if compute_direction:
+            loss_direction, direction_score_high, direction_score_low = (
+                self.directional_score_loss_fn(
+                    z0=z0,
+                    high_prompts=direction_high_prompts,
+                    low_prompts=direction_low_prompts,
+                )
             )
 
         # --------------------------------------------------------
@@ -666,6 +909,7 @@ class LDLALocalAgingLoss(nn.Module):
             + self.lambda_zone * loss_zone
             + self.lambda_score * loss_score
             + self.lambda_cycle * loss_cycle
+            + self.lambda_direction * loss_direction
         )
 
         # --------------------------------------------------------
@@ -680,18 +924,33 @@ class LDLALocalAgingLoss(nn.Module):
             "loss_zone": loss_zone.detach(),
             "loss_score": loss_score.detach(),
             "loss_cycle": loss_cycle.detach(),
+            "loss_direction": loss_direction.detach(),
 
             # Active flags.
             "compute_full": compute_full,
             "compute_zone": compute_zone,
             "compute_score": compute_score,
             "compute_cycle": compute_cycle,
+            "compute_direction": compute_direction,
 
             # Lambdas.
             "lambda_full": self.lambda_full,
             "lambda_zone": self.lambda_zone,
             "lambda_score": self.lambda_score,
             "lambda_cycle": self.lambda_cycle,
+            "lambda_direction": self.lambda_direction,
+
+            # Directional diagnostics.
+            "direction_score_high": (
+                direction_score_high.detach()
+                if direction_score_high is not None
+                else None
+            ),
+            "direction_score_low": (
+                direction_score_low.detach()
+                if direction_score_low is not None
+                else None
+            ),
 
             # Scores.
             "source_score": source_scores.detach(),

@@ -84,6 +84,15 @@ def train_global_local_face_aging(
     local_p_neutral: float = 0.10,
     local_p_double_full: float = 0.15,
 
+    # Directional/contrastive score loss (Error 3). The numeric hyperparameters
+    # (lambda_direction, margin, high/low score, timesteps) are configured on the
+    # local loss via local_loss_kwargs; these control how often it runs.
+    local_p_direction: float = 0.0,
+    local_enable_direction: bool = False,
+
+    # True classifier-free-guidance dropout for the local branch (empty-prompt).
+    local_p_uncond: float = 0.0,
+
     # Optional local deterministic fused loss.
     local_fused_train_loader=None,
     local_fused_loss_fn=None,
@@ -462,11 +471,14 @@ def train_global_local_face_aging(
                     p_full=local_p_full,
                     p_score=local_p_score,
                     p_zone=local_p_zone,
+                    p_direction=local_p_direction,
                     enable_full=local_enable_full,
                     enable_score=local_enable_score,
                     enable_zone=local_enable_zone,
+                    enable_direction=local_enable_direction,
 
                     p_neutral=local_p_neutral,
+                    p_uncond=local_p_uncond,
                     p_double_full=local_p_double_full,
 
                     grad_accum_steps=local_grad_accum_steps,

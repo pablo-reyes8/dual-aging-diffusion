@@ -1070,12 +1070,14 @@ class GentleLocalAugment:
         self,
         resolution: int = 256,
         train: bool = True,
-        enable_horizontal_flip: bool = False,
+        enable_horizontal_flip: bool = True,
+        horizontal_flip_p: float = 0.20,
         normalize_for_diffusion: bool = True):
 
         self.resolution = resolution
         self.train = train
         self.enable_horizontal_flip = enable_horizontal_flip
+        self.horizontal_flip_p = float(horizontal_flip_p)
         self.normalize_for_diffusion = normalize_for_diffusion
 
         if train:
@@ -1113,7 +1115,12 @@ class GentleLocalAugment:
             ]
 
             if enable_horizontal_flip:
-                aug_list.insert(1, transforms.RandomHorizontalFlip(p=0.35))
+                # Gentle by default: flips are free texture augmentation for the
+                # local LoRA (crops are re-extracted by landmarks at inference,
+                # so left/right geometry only matters in the fusion stage, not
+                # when training the crop denoiser). Keep p low so flips do not
+                # dominate the limited dataset.
+                aug_list.insert(1, transforms.RandomHorizontalFlip(p=self.horizontal_flip_p))
 
         else:
             aug_list = [
@@ -1164,7 +1171,9 @@ class LocalAgingCropDataset(Dataset):
         virtual_repeats: int = 8,
         train: bool = True,
         jitter_scores_enabled: bool = True,
-        enable_horizontal_flip: bool = False,
+        enable_horizontal_flip: bool = True,
+        horizontal_flip_p: float = 0.20,
+        prompt_uses_original_score: bool = True,
         normalize_for_diffusion: bool = True,
         drop_regions: Optional[List[str]] = None,
         skip: Optional[List[str]] = None,
@@ -1175,6 +1184,11 @@ class LocalAgingCropDataset(Dataset):
         self.virtual_repeats = max(1, int(virtual_repeats))
         self.train = bool(train)
         self.jitter_scores_enabled = bool(jitter_scores_enabled)
+        # Error 2 fix: the FULL prompt is paired with the REAL crop pixels, so it
+        # must describe the true (original) score. Source-side jitter made the
+        # prompt claim a score that did not match the pixels. Upward exploration
+        # now lives only in target-score sampling (sample_local_target_score_*).
+        self.prompt_uses_original_score = bool(prompt_uses_original_score)
 
         requested_skip_regions = skip_regions if skip_regions is not None else skip
         drop_regions = set(
@@ -1193,6 +1207,7 @@ class LocalAgingCropDataset(Dataset):
             resolution=self.resolution,
             train=self.train,
             enable_horizontal_flip=enable_horizontal_flip,
+            horizontal_flip_p=horizontal_flip_p,
             normalize_for_diffusion=normalize_for_diffusion)
 
     def __len__(self):
@@ -1215,13 +1230,19 @@ class LocalAgingCropDataset(Dataset):
         crop = image.crop((left, top, right, bottom))
 
         score_original = float(sample["score_raw"])
-        score_aug = jitter_score(
-            score_original,
-            enabled=(self.train and self.jitter_scores_enabled))
+
+        if self.prompt_uses_original_score:
+            # Error 2 fix: prompt and reported score describe the REAL pixels.
+            score_for_prompt = score_original
+        else:
+            # Legacy behavior (prompt<->pixel mismatch); kept for ablations.
+            score_for_prompt = jitter_score(
+                score_original,
+                enabled=(self.train and self.jitter_scores_enabled))
 
         prompt = make_local_prompt(
             region_key=sample["region_key"],
-            score=score_aug,
+            score=score_for_prompt,
             ethnicity_text=sample.get("ethnicity_raw", None))
 
         zone_prompt = make_zone_prompt(sample["region_key"])
@@ -1231,8 +1252,8 @@ class LocalAgingCropDataset(Dataset):
         return {
             "pixel_values": pixel_values,
 
-            "score": torch.tensor(score_aug / 100.0, dtype=torch.float32),
-            "score_raw": torch.tensor(score_aug, dtype=torch.float32),
+            "score": torch.tensor(score_for_prompt / 100.0, dtype=torch.float32),
+            "score_raw": torch.tensor(score_for_prompt, dtype=torch.float32),
             "score_original": torch.tensor(score_original, dtype=torch.float32),
 
             "prompt": prompt,

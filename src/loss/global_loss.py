@@ -41,7 +41,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.loss.global_aux_bundle import * 
+from src.loss.global_aux_bundle import *
+from src.loss.ddim_generation import ddim_generate_images
 
 class GlobalAgingLoss(nn.Module):
     def __init__(
@@ -75,10 +76,49 @@ class GlobalAgingLoss(nn.Module):
         # Forward can override this.
         default_semantic_components: Tuple[str, ...] = ("age", "delta_age", "id"),
 
+        # ----------------------------------------------------------------
+        # Semantic generation mode (Error 1 fix).
+        #   "1_step_per_loss":
+        #       Original LDLA-style single-step x0_hat estimate (cheap, blurry).
+        #       When semantic_anchor_to_source=True (default), all semantic
+        #       losses become RELATIVE: the source reference is reconstructed
+        #       through the SAME single-step path (shared noise/timestep) so the
+        #       VAE/one-step blur cancels out between source and target.
+        #   "full_ddim":
+        #       Short deterministic DDIM trajectory -> sharper edited image.
+        #       The frozen auxiliaries see an in-domain (sharp) image, so the
+        #       source reference stays the clean input. Use a low
+        #       full_ddim_max_timestep (~120) so the edit is mild.
+        # ----------------------------------------------------------------
+        semantic_loss_mode: str = "1_step_per_loss",
+        semantic_anchor_to_source: bool = True,
+        full_ddim_num_steps: int = 10,
+        full_ddim_max_timestep: int = 120,
+
+        # Min-SNR-gamma reweighting of the diffusion (diff) loss.
+        # Off by default to keep the baseline unchanged.
+        use_min_snr: bool = False,
+        min_snr_gamma: float = 5.0,
+
         device: Optional[str] = None,
         unet_dtype: Optional[torch.dtype] = None,
     ):
         super().__init__()
+
+        valid_semantic_modes = {"1_step_per_loss", "full_ddim"}
+        semantic_loss_mode = str(semantic_loss_mode).lower().strip()
+        if semantic_loss_mode not in valid_semantic_modes:
+            raise ValueError(
+                f"Invalid semantic_loss_mode='{semantic_loss_mode}'. "
+                f"Valid: {sorted(valid_semantic_modes)}"
+            )
+
+        self.semantic_loss_mode = semantic_loss_mode
+        self.semantic_anchor_to_source = bool(semantic_anchor_to_source)
+        self.full_ddim_num_steps = int(full_ddim_num_steps)
+        self.full_ddim_max_timestep = int(full_ddim_max_timestep)
+        self.use_min_snr = bool(use_min_snr)
+        self.min_snr_gamma = float(min_snr_gamma)
 
         self.global_bundle = global_bundle
         self.global_loss_bundle = global_loss_bundle
@@ -176,6 +216,12 @@ class GlobalAgingLoss(nn.Module):
         print("gamma_timestep:", self.gamma_timestep)
         print("timestep range:", self.timestep_min, self.timestep_max)
         print("semantic timestep range:", self.semantic_timestep_min, self.semantic_timestep_max)
+        print("semantic_loss_mode:", self.semantic_loss_mode)
+        print("semantic_anchor_to_source:", self.semantic_anchor_to_source)
+        if self.semantic_loss_mode == "full_ddim":
+            print("full_ddim_num_steps:", self.full_ddim_num_steps)
+            print("full_ddim_max_timestep:", self.full_ddim_max_timestep)
+        print("use_min_snr:", self.use_min_snr, "| min_snr_gamma:", self.min_snr_gamma)
         print("default_semantic_components:", self.default_semantic_components)
         print("device:", self.device)
         print("unet_dtype:", self.unet_dtype)
@@ -357,6 +403,24 @@ class GlobalAgingLoss(nn.Module):
     # Branches
     # --------------------------------------------------------
 
+    def min_snr_weight(self, timesteps: torch.Tensor) -> torch.Tensor:
+        """
+        Min-SNR-gamma weight for epsilon-prediction:
+
+            SNR(t) = alpha_bar_t / (1 - alpha_bar_t)
+            w(t)   = min(SNR(t), gamma) / SNR(t)
+
+        Returns [B].
+        """
+        alphas_cumprod = self.scheduler.alphas_cumprod.to(
+            device=self.device,
+            dtype=torch.float32,
+        )
+        ab = alphas_cumprod[timesteps].float().clamp(1e-8, 1.0 - 1e-8)
+        snr = ab / (1.0 - ab)
+        w = torch.clamp(snr, max=self.min_snr_gamma) / snr
+        return w.view(-1)
+
     def diffusion_loss(
         self,
         z0: torch.Tensor,
@@ -364,6 +428,8 @@ class GlobalAgingLoss(nn.Module):
 
         """
         L_diff with source/observed prompts.
+
+        Optionally reweighted with Min-SNR-gamma (use_min_snr=True).
         """
         B = z0.shape[0]
 
@@ -379,11 +445,16 @@ class GlobalAgingLoss(nn.Module):
             encoder_hidden_states=hidden,
         )
 
-        loss_diff = F.mse_loss(
-            noise_pred.float(),
-            noise.float(),
-            reduction="mean",
-        )
+        if self.use_min_snr:
+            per_sample = (noise_pred.float() - noise.float()).pow(2).mean(dim=[1, 2, 3])
+            weights = self.min_snr_weight(timesteps)
+            loss_diff = (weights * per_sample).mean()
+        else:
+            loss_diff = F.mse_loss(
+                noise_pred.float(),
+                noise.float(),
+                reduction="mean",
+            )
 
         return {
             "loss_diff": loss_diff,
@@ -393,19 +464,64 @@ class GlobalAgingLoss(nn.Module):
     def semantic_forward(
         self,
         z0: torch.Tensor,
-        target_prompts: List[str]) -> Dict[str, torch.Tensor]:
+        target_prompts: List[str],
+        source_prompts: Optional[List[str]] = None,
+        clean_source_images: Optional[torch.Tensor] = None) -> Dict[str, torch.Tensor]:
 
         """
-        One-step target-conditioned denoising for semantic losses.
+        Target-conditioned generation for semantic losses, shared by:
+            age / delta-age / identity / perceptual.
 
-        This branch is shared by:
-            age loss
-            delta-age loss
-            identity loss
-            perceptual loss
+        Two modes (Error 1 fix):
+
+          "1_step_per_loss":
+            Single-step x0_hat estimate (blurry). If semantic_anchor_to_source
+            is True and source_prompts are given, the SOURCE reference is
+            reconstructed through the SAME single-step path with shared
+            noise/timestep, so all semantic losses become RELATIVE and the
+            one-step/VAE blur cancels between source and target.
+
+          "full_ddim":
+            Short deterministic DDIM trajectory -> sharper edited image. The
+            generated image is in-domain for the frozen auxiliaries, so the
+            source reference stays the clean input image.
+
+        Returns a dict that always includes:
+            x0_hat_images       : generated (edited) image, grad-carrying
+            source_ref_images   : reference image in the SAME domain as the
+                                  generated image (for id/delta/perc)
+            semantic_weights    : per-sample timestep weights ([B])
         """
         B = z0.shape[0]
 
+        if self.semantic_loss_mode == "full_ddim":
+            # Sharp generated image; auxiliaries are in-domain so the clean
+            # source is a valid reference.
+            x0_hat_images = ddim_generate_images(
+                self,
+                z0=z0,
+                prompts=target_prompts,
+                num_steps=self.full_ddim_num_steps,
+                max_timestep=self.full_ddim_max_timestep,
+            )
+
+            if clean_source_images is not None:
+                source_ref_images = clean_source_images
+            else:
+                source_ref_images = self.decode_latents_to_images(z0).detach()
+
+            weights = torch.ones(B, device=self.device, dtype=torch.float32)
+
+            return {
+                "timesteps_semantic": None,
+                "semantic_weights": weights,
+                "noise_pred_target": None,
+                "x0_hat_latents": None,
+                "x0_hat_images": x0_hat_images,
+                "source_ref_images": source_ref_images,
+            }
+
+        # ---- "1_step_per_loss" ----
         noise = torch.randn_like(z0)
 
         timesteps = self.sample_timesteps(
@@ -432,6 +548,28 @@ class GlobalAgingLoss(nn.Module):
 
         x0_hat_images = self.decode_latents_to_images(x0_hat_latents)
 
+        # Relative source reference: same noise + same timestep, source prompt.
+        if self.semantic_anchor_to_source and source_prompts is not None:
+            source_hidden = self.encode_prompts(source_prompts)
+            with torch.no_grad():
+                noise_pred_source = self.predict_noise(
+                    noisy_latents=zt,
+                    timesteps=timesteps,
+                    encoder_hidden_states=source_hidden,
+                )
+                x0_hat_source_latents = self.predict_x0_from_noise(
+                    noisy_latents=zt,
+                    timesteps=timesteps,
+                    noise_pred=noise_pred_source,
+                )
+                source_ref_images = self.decode_latents_to_images(
+                    x0_hat_source_latents
+                ).detach()
+        elif clean_source_images is not None:
+            source_ref_images = clean_source_images
+        else:
+            source_ref_images = self.decode_latents_to_images(z0).detach()
+
         weights = self.semantic_timestep_weight(timesteps)
 
         return {
@@ -440,6 +578,7 @@ class GlobalAgingLoss(nn.Module):
             "noise_pred_target": noise_pred_target,
             "x0_hat_latents": x0_hat_latents,
             "x0_hat_images": x0_hat_images,
+            "source_ref_images": source_ref_images,
         }
 
     # --------------------------------------------------------
@@ -542,8 +681,13 @@ class GlobalAgingLoss(nn.Module):
                         grad_to_input=False,
                     ).float().view(-1)
 
-                target_delta = target_ages - source_ages
-                pred_delta = age_gen_pred - age_src_pred.detach()
+                # Error 6 fix: anchor the desired delta to the SAME estimator
+                # (ViT) source prediction, not to the CSV `source_ages`. Mixing
+                # CSV ages with ViT predictions made the delta target biased by
+                # the systematic offset between the two age models.
+                age_src_anchor = age_src_pred.detach()
+                target_delta = target_ages - age_src_anchor
+                pred_delta = age_gen_pred - age_src_anchor
 
                 loss_delta_age_per = (
                     torch.abs(pred_delta - target_delta) / self.age_loss_scale
@@ -781,14 +925,22 @@ class GlobalAgingLoss(nn.Module):
         if compute_semantic:
             sem_out = self.semantic_forward(
                 z0=z0,
-                target_prompts=target_prompts,)
+                target_prompts=target_prompts,
+                source_prompts=source_prompts,
+                clean_source_images=pixel_values.float(),)
 
             generated_images = sem_out["x0_hat_images"]
             semantic_weights = sem_out["semantic_weights"]
             timesteps_semantic = sem_out["timesteps_semantic"]
 
+            # In "1_step_per_loss" + anchor mode this is the source reconstructed
+            # through the same blurry one-step path; in "full_ddim" it is the
+            # clean input. Using it as the reference makes id/delta/perc measure
+            # the actual age-induced change, not the VAE/one-step blur.
+            source_ref_images = sem_out["source_ref_images"]
+
             semantic_losses = self.compute_semantic_losses(
-                source_images=pixel_values.float(),
+                source_images=source_ref_images.float(),
                 generated_images=generated_images.float(),
                 source_ages=source_ages,
                 target_ages=target_ages,

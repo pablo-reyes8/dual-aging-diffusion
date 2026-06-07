@@ -33,9 +33,11 @@ def normalize_loss_mode_probs(
     p_full: float = 0.50,
     p_score: float = 0.35,
     p_zone: float = 0.15,
+    p_direction: float = 0.0,
     enable_full: bool = True,
     enable_score: bool = True,
-    enable_zone: bool = True) -> Dict[str, float]:
+    enable_zone: bool = True,
+    enable_direction: bool = False) -> Dict[str, float]:
 
     """
     Normalize probabilities after applying mode flags.
@@ -44,12 +46,13 @@ def normalize_loss_mode_probs(
     Remaining probabilities are renormalized.
 
     Returns:
-        dict with keys: full, score, zone.
+        dict with keys: full, score, zone, direction.
     """
     probs = {
         "full": float(p_full) if enable_full else 0.0,
         "score": float(p_score) if enable_score else 0.0,
         "zone": float(p_zone) if enable_zone else 0.0,
+        "direction": float(p_direction) if enable_direction else 0.0,
     }
 
     for k, v in probs.items():
@@ -70,9 +73,11 @@ def sample_local_loss_mode(
     p_full: float = 0.50,
     p_score: float = 0.35,
     p_zone: float = 0.15,
+    p_direction: float = 0.0,
     enable_full: bool = True,
     enable_score: bool = True,
-    enable_zone: bool = True) -> str:
+    enable_zone: bool = True,
+    enable_direction: bool = False) -> str:
     """
     Samples local loss mode.
 
@@ -85,25 +90,36 @@ def sample_local_loss_mode(
 
         score:
             target prompt + target score loss.
+
+        direction:
+            relative/contrastive score loss (high vs low score edits).
     """
     probs = normalize_loss_mode_probs(
         p_full=p_full,
         p_score=p_score,
         p_zone=p_zone,
+        p_direction=p_direction,
         enable_full=enable_full,
         enable_score=enable_score,
         enable_zone=enable_zone,
+        enable_direction=enable_direction,
     )
 
     u = random.random()
 
-    if u < probs["full"]:
+    cum = probs["full"]
+    if u < cum:
         return "full"
 
-    if u < probs["full"] + probs["score"]:
+    cum += probs["score"]
+    if u < cum:
         return "score"
 
-    return "zone"
+    cum += probs["zone"]
+    if u < cum:
+        return "zone"
+
+    return "direction"
 
 
 # ============================================================
@@ -172,6 +188,8 @@ def call_local_loss_fn(
     zone_prompts_override: Optional[List[str]] = None,
     zone_prompt_key: str = "zone_prompt",
     pass_target_scores_for_all_modes: bool = True,
+    direction_high_prompts: Optional[List[str]] = None,
+    direction_low_prompts: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Calls local loss function.
@@ -228,6 +246,8 @@ def call_local_loss_fn(
         zone_prompts=zone_prompts,
         target_prompts=target_prompts,
         target_scores=target_scores_arg,
+        direction_high_prompts=direction_high_prompts,
+        direction_low_prompts=direction_low_prompts,
     )
 
     if not isinstance(loss_out, dict):
@@ -425,12 +445,19 @@ def train_one_epoch_local(
     p_full: float = 0.50,
     p_score: float = 0.35,
     p_zone: float = 0.15,
+    p_direction: float = 0.0,
     enable_full: bool = True,
     enable_score: bool = True,
     enable_zone: bool = True,
+    enable_direction: bool = False,
 
     # Prompt construction.
     p_neutral: float = 0.10,
+
+    # True classifier-free-guidance dropout: with this probability the source
+    # prompt is replaced by the empty string "" (a real unconditional sample),
+    # enabling CFG at inference. Off by default (baseline).
+    p_uncond: float = 0.0,
 
     # Explicit double-prompt.
     p_double_full: float = 0.15,
@@ -542,13 +569,27 @@ def train_one_epoch_local(
     if len(trainable_params) == 0:
         raise ValueError("No trainable parameters found in local_bundle['unet'].")
 
+    # The directional mode requires an activated directional loss on the loss fn.
+    directional_available = (
+        getattr(local_loss_fn, "directional_loss", None) is not None
+    )
+    enable_direction_effective = bool(enable_direction and directional_available)
+    if enable_direction and not directional_available and verbose:
+        print(
+            "[WARN] enable_direction=True but local_loss_fn has no active "
+            "directional_loss (use_directional_score / lambda_direction). "
+            "Directional mode disabled."
+        )
+
     mode_probs = normalize_loss_mode_probs(
         p_full=p_full,
         p_score=p_score,
         p_zone=p_zone,
+        p_direction=p_direction,
         enable_full=enable_full,
         enable_score=enable_score,
         enable_zone=enable_zone,
+        enable_direction=enable_direction_effective,
     )
 
     if verbose:
@@ -560,6 +601,8 @@ def train_one_epoch_local(
         print("Grad accumulation:     ", grad_accum_steps)
         print("Grad clip:             ", grad_clip)
         print("p_neutral:             ", p_neutral)
+        print("p_uncond (CFG drop):   ", p_uncond)
+        print("p_direction:           ", p_direction, "| enabled:", enable_direction_effective)
         print("p_double_full:         ", p_double_full)
         print("Approx DP frequency:   ", mode_probs["full"] * p_double_full)
         print("Mode probs:            ", mode_probs)
@@ -623,15 +666,48 @@ def train_one_epoch_local(
         )
 
         # --------------------------------------------------------
+        # True CFG dropout: replace the selected source prompt by "" with
+        # probability p_uncond (per sample). Only affects the single-prompt
+        # full/zone path; the explicit double-prompt path keeps source/neutral.
+        # --------------------------------------------------------
+        if p_uncond and float(p_uncond) > 0.0:
+            local_prompt_pack["selected_source_prompts"] = [
+                "" if random.random() < float(p_uncond) else sp
+                for sp in local_prompt_pack["selected_source_prompts"]
+            ]
+
+        # --------------------------------------------------------
+        # Build directional high/low prompts (Error 3) from the base prompts.
+        # Only the score token differs; wording style is shared ("aging").
+        # --------------------------------------------------------
+        direction_high_prompts = None
+        direction_low_prompts = None
+        if enable_direction_effective:
+            dl = local_loss_fn.directional_loss
+            high_raw = int(round(float(dl.high_score) * 100))
+            low_raw = int(round(float(dl.low_score) * 100))
+            base_prompts = local_prompt_pack["source_prompts"]
+            direction_high_prompts = [
+                build_local_target_prompt_from_base(p, high_raw, "aging")
+                for p in base_prompts
+            ]
+            direction_low_prompts = [
+                build_local_target_prompt_from_base(p, low_raw, "aging")
+                for p in base_prompts
+            ]
+
+        # --------------------------------------------------------
         # Sample loss mode.
         # --------------------------------------------------------
         loss_mode = sample_local_loss_mode(
             p_full=p_full,
             p_score=p_score,
             p_zone=p_zone,
+            p_direction=p_direction,
             enable_full=enable_full,
             enable_score=enable_score,
             enable_zone=enable_zone,
+            enable_direction=enable_direction_effective,
         )
 
         # --------------------------------------------------------
@@ -796,6 +872,8 @@ def train_one_epoch_local(
                     source_prompts_override=None,
                     zone_prompt_key=zone_prompt_key,
                     pass_target_scores_for_all_modes=True,
+                    direction_high_prompts=direction_high_prompts,
+                    direction_low_prompts=direction_low_prompts,
                 )
 
                 raw_loss = loss_out["loss"]
