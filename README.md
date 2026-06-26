@@ -2,7 +2,7 @@
   <img src="assets\header_image.png" width="1000"/>
 </p>
 
-# Dual Diffusion Agingaaaaaa
+# Dual Diffusion Agingaaaaaaa
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)
