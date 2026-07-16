@@ -1,0 +1,9 @@
+_base_: default_train.yaml
+
+run:
+  name: global_local_paired_fgnet
+  checkpoint_root: training_checkpoints/global_local_paired_fgnet
+
+paired_supervision:
+  enabled: true
+  config_path: configs/data/paired_fgnet.yaml

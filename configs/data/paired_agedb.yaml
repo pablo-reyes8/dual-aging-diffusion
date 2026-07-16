@@ -1,0 +1,26 @@
+# Alternativa grande e in-the-wild. Recomendado después de validar FG-NET.
+dataset: agedb
+root: null
+cache_dir: data/external/paired_aging
+download_if_missing: true
+
+resolution: 512
+batch_size: 2
+num_workers: 2
+pin_memory: true
+seed: 42
+
+min_age_gap: 5
+max_age_gap: 40
+max_pairs_per_identity: 8
+min_image_side: 128            # descarta thumbnails demasiado pequeños
+val_fraction: 0.15
+
+every_n_steps: 4
+weight: 0.20                   # algo menor por la mayor heterogeneidad visual
+loss:
+  lambda_target_diff: 1.0
+  lambda_source_diff: 0.25
+  lambda_latent_delta: 0.0
+  use_min_snr: true
+  min_snr_gamma: 5.0

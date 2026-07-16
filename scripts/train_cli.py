@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 import torch
 
-from scripts.common import deep_update, load_config, print_config_summary
+from scripts.common import REPO_ROOT, deep_update, load_config, print_config_summary
 
 
 DEFAULT_CONFIG: Dict[str, Any] = {
@@ -46,7 +46,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "local_optimizer": {"lr": 7.0e-5},
     },
     "score_net": {
-        "checkpoint_path": None,
+        "checkpoint_path": "models/score net/score_net_best_overall.pt",
         "base_channels": 32,
         "dropout": 0.15,
         "strict": True,
@@ -107,16 +107,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     "paired_supervision": {
         "enabled": False,
-        "root": None,
-        "dataset": "auto",
-        "batch_size": 2,
-        "every_n_steps": 4,
-        "weight": 0.25,
-        "min_age_gap": 5,
-        "max_age_gap": 40,
-        "max_pairs_per_identity": 8,
-        "min_image_side": 128,
-        "val_fraction": 0.15,
+        "config_path": "configs/data/paired_fgnet.yaml",
     },
     "sampling": {
         "enabled": False,
@@ -287,64 +278,108 @@ def build_losses(
     return local_loss, global_loss
 
 
-def build_global_paired_supervision(config, mixed_global_bundle, device):
-    paired_cfg = config.get("paired_supervision", {})
+def resolve_paired_supervision_config(config):
+    inline = dict(config.get("paired_supervision", {}))
+    config_path = inline.pop("config_path", None)
+    file_config = load_config(config_path) if config_path else {}
+    # The dedicated YAML supplies reusable defaults; explicit high-level values
+    # remain valid overrides (useful for short notebook experiments).
+    paired_cfg = deep_update(file_config, inline) if config_path else inline
+    paired_cfg["enabled"] = bool(config.get("paired_supervision", {}).get("enabled", False))
+    for key in ("root", "cache_dir"):
+        value = paired_cfg.get(key)
+        if value:
+            path = Path(value)
+            paired_cfg[key] = str(path if path.is_absolute() else (REPO_ROOT / path))
+    if config_path:
+        paired_cfg["config_path"] = config_path
+    return paired_cfg
+
+
+def load_training_config(path: str | Path = "configs/training/default_train.yaml"):
+    """Load one complete training config, including optional data sub-configs."""
+    config = deep_update(DEFAULT_CONFIG, load_config(str(path)))
+    config["paired_supervision"] = resolve_paired_supervision_config(config)
+    return config
+
+
+def prepare_paired_dataset(config):
+    """Resolve/download paired data before expensive model allocation."""
+    paired_cfg = resolve_paired_supervision_config(config)
     if not bool(paired_cfg.get("enabled", False)):
-        return None, None
-    root = paired_cfg.get("root")
-    if not root:
-        raise ValueError("paired_supervision.enabled=true requires paired_supervision.root")
+        return paired_cfg
+
+    from data.paired_aging_dataset import ensure_paired_aging_dataset
+
+    root = ensure_paired_aging_dataset(
+        dataset=paired_cfg.get("dataset", "fgnet"),
+        root=paired_cfg.get("root"),
+        cache_dir=paired_cfg.get("cache_dir", REPO_ROOT / "data/external/paired_aging"),
+        download_if_missing=bool(paired_cfg.get("download_if_missing", True)),
+    )
+    paired_cfg["root"] = str(root)
+    return paired_cfg
+
+
+def build_global_paired_supervision(
+    config,
+    mixed_global_bundle,
+    device,
+    paired_cfg=None,
+):
+    paired_cfg = prepare_paired_dataset(config) if paired_cfg is None else paired_cfg
+    if not bool(paired_cfg.get("enabled", False)):
+        return None, None, paired_cfg
 
     from data.paired_aging_dataset import build_paired_aging_dataloaders
     from src.loss.paired_supervision_loss import PairedDiffusionSupervisionLoss
 
     objects = build_paired_aging_dataloaders(
-        root=root,
+        root=paired_cfg["root"],
         dataset=paired_cfg.get("dataset", "auto"),
+        resolution=int(paired_cfg.get("resolution", 512)),
         batch_size=int(paired_cfg.get("batch_size", 2)),
         val_fraction=float(paired_cfg.get("val_fraction", 0.15)),
         min_age_gap=int(paired_cfg.get("min_age_gap", 5)),
         max_age_gap=int(paired_cfg.get("max_age_gap", 40)),
         max_pairs_per_identity=paired_cfg.get("max_pairs_per_identity", 8),
         min_image_side=int(paired_cfg.get("min_image_side", 128)),
-        num_workers=int(config["data"].get("num_workers", 0)),
-        pin_memory=bool(config["data"].get("pin_memory", False)),
+        seed=int(paired_cfg.get("seed", 42)),
+        num_workers=int(paired_cfg.get("num_workers", config["data"].get("num_workers", 0))),
+        pin_memory=bool(paired_cfg.get("pin_memory", config["data"].get("pin_memory", False))),
     )
+    loss_cfg = paired_cfg.get("loss", {})
     loss_fn = PairedDiffusionSupervisionLoss(
         mixed_global_bundle,
-        lambda_target_diff=1.0,
-        lambda_source_diff=0.25,
-        lambda_latent_delta=0.0,
-        use_min_snr=True,
+        lambda_target_diff=float(loss_cfg.get("lambda_target_diff", 1.0)),
+        lambda_source_diff=float(loss_cfg.get("lambda_source_diff", 0.25)),
+        lambda_latent_delta=float(loss_cfg.get("lambda_latent_delta", 0.0)),
+        use_min_snr=bool(loss_cfg.get("use_min_snr", True)),
+        min_snr_gamma=float(loss_cfg.get("min_snr_gamma", 5.0)),
         device=str(device),
     )
-    return objects["train_loader"], loss_fn
+    return objects["train_loader"], loss_fn, paired_cfg
 
 
-def main() -> None:
-    args = parse_args()
-    config = deep_update(DEFAULT_CONFIG, load_config(args.config))
-
-    if args.run_name is not None:
-        config["run"]["name"] = args.run_name
-    if args.checkpoint_root is not None:
-        config["run"]["checkpoint_root"] = args.checkpoint_root
-    if args.device is not None:
-        config["device"]["device"] = args.device
-
-    if args.print_config or args.dry_run:
-        print_config_summary(config)
-
-    if args.dry_run:
-        print("[DRY RUN] Config validated. Models/data were not loaded.")
-        return
+def run_training(config: str | Path | Dict[str, Any]):
+    """Run the complete global/local pipeline from a YAML path or config dict."""
+    if isinstance(config, (str, Path)):
+        config = load_training_config(config)
+    else:
+        config = deep_update(DEFAULT_CONFIG, config)
+    config["paired_supervision"] = resolve_paired_supervision_config(config)
+    # Network/cache work happens before allocating diffusion models on GPU.
+    config["paired_supervision"] = prepare_paired_dataset(config)
 
     device, dtype = resolve_device_and_dtype(config)
     local_objects, global_objects, local_fused_objects = build_data(config)
     mixed_global_bundle, mixed_local_bundle = build_model_bundles(config, device, dtype)
     local_loss, global_loss = build_losses(config, mixed_global_bundle, mixed_local_bundle, device)
-    global_paired_loader, global_paired_loss = build_global_paired_supervision(
-        config, mixed_global_bundle, device
+    global_paired_loader, global_paired_loss, paired_cfg = build_global_paired_supervision(
+        config,
+        mixed_global_bundle,
+        device,
+        paired_cfg=config["paired_supervision"],
     )
 
     from src.training.train_aging_model import train_global_local_face_aging
@@ -391,10 +426,10 @@ def main() -> None:
         global_paired_train_loader=global_paired_loader,
         global_paired_loss_fn=global_paired_loss,
         global_paired_every_n_steps=int(
-            config.get("paired_supervision", {}).get("every_n_steps", 0)
+            paired_cfg.get("every_n_steps", 0)
         ) if global_paired_loader is not None else 0,
         global_paired_weight=float(
-            config.get("paired_supervision", {}).get("weight", 0.0)
+            paired_cfg.get("weight", 0.0)
         ) if global_paired_loader is not None else 0.0,
         device=device,
         amp_enabled=bool(config["device"]["amp_enabled"]),
@@ -407,6 +442,28 @@ def main() -> None:
         **train_cfg,
     )
 
+    return result
+
+
+def main() -> None:
+    args = parse_args()
+    config = load_training_config(args.config)
+
+    if args.run_name is not None:
+        config["run"]["name"] = args.run_name
+    if args.checkpoint_root is not None:
+        config["run"]["checkpoint_root"] = args.checkpoint_root
+    if args.device is not None:
+        config["device"]["device"] = args.device
+
+    if args.print_config or args.dry_run:
+        print_config_summary(config)
+
+    if args.dry_run:
+        print("[DRY RUN] Config validated. Models/data were not loaded or downloaded.")
+        return
+
+    result = run_training(config)
     print("\n[TRAINING RESULT]")
     print(result)
 

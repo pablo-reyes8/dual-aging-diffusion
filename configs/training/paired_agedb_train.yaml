@@ -1,0 +1,9 @@
+_base_: default_train.yaml
+
+run:
+  name: global_local_paired_agedb
+  checkpoint_root: training_checkpoints/global_local_paired_agedb
+
+paired_supervision:
+  enabled: true
+  config_path: configs/data/paired_agedb.yaml

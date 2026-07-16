@@ -1,9 +1,13 @@
+import zipfile
 from pathlib import Path
 
 from PIL import Image
 
+import data.paired_aging_dataset as paired_module
 from data.paired_aging_dataset import (
     PairedAgingDataset,
+    download_kaggle_paired_dataset,
+    ensure_paired_aging_dataset,
     discover_aging_records,
     make_aging_pairs,
     split_records_by_identity,
@@ -49,3 +53,42 @@ def test_agedb_parser_filters_tiny_images(tmp_path):
     assert [record.age for record in records] == [40, 55]
     assert all(record.identity == "Jane Doe" for record in records)
     assert all(record.gender == "female" for record in records)
+
+
+def test_kaggle_download_is_verified_and_reused(tmp_path, monkeypatch):
+    source = tmp_path / "source.JPG"
+    _image(source)
+    calls = []
+
+    def fake_urlretrieve(url, destination):
+        calls.append(url)
+        with zipfile.ZipFile(destination, "w") as archive:
+            archive.write(source, arcname="FGNET/images/001A10.JPG")
+        return str(destination), None
+
+    monkeypatch.setattr(paired_module.urllib.request, "urlretrieve", fake_urlretrieve)
+    monkeypatch.setitem(paired_module.EXPECTED_MIN_IMAGES, "fgnet", 1)
+
+    first = download_kaggle_paired_dataset("fgnet", tmp_path / "cache")
+    second = download_kaggle_paired_dataset("fgnet", tmp_path / "cache")
+
+    assert first == second
+    assert len(calls) == 1
+    assert (first / paired_module.COMPLETE_MARKER).is_file()
+    assert len(list(first.rglob("*.JPG"))) == 1
+
+
+def test_custom_root_wins_without_downloading(tmp_path, monkeypatch):
+    custom_root = tmp_path / "my_fgnet"
+    _image(custom_root / "001A10.JPG")
+
+    def fail_download(*args, **kwargs):
+        raise AssertionError("A valid custom root must not trigger a download")
+
+    monkeypatch.setattr(paired_module, "download_kaggle_paired_dataset", fail_download)
+    resolved = ensure_paired_aging_dataset(
+        "fgnet",
+        root=custom_root,
+        cache_dir=tmp_path / "cache",
+    )
+    assert resolved == custom_root

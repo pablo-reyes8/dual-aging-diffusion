@@ -6,6 +6,7 @@ from pathlib import Path
 from scripts.common import deep_update, load_config
 from scripts.inference_cli import DEFAULT_CONFIG as INFERENCE_DEFAULTS
 from scripts.train_cli import DEFAULT_CONFIG as TRAIN_DEFAULTS
+from scripts.train_cli import load_training_config
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -55,6 +56,31 @@ def test_training_cli_dry_run_does_not_load_models():
 
     assert result.returncode == 0, result.stderr
     assert "Models/data were not loaded" in result.stdout
+
+
+def test_paired_training_yamls_inherit_defaults_and_select_dataset():
+    fgnet = load_training_config(REPO_ROOT / "configs/training/paired_fgnet_train.yaml")
+    agedb = load_training_config(REPO_ROOT / "configs/training/paired_agedb_train.yaml")
+
+    assert fgnet["models"]["global_model_id"] == TRAIN_DEFAULTS["models"]["global_model_id"]
+    assert fgnet["paired_supervision"]["enabled"] is True
+    assert fgnet["paired_supervision"]["dataset"] == "fgnet"
+    assert fgnet["paired_supervision"]["weight"] == 0.25
+    assert agedb["paired_supervision"]["enabled"] is True
+    assert agedb["paired_supervision"]["dataset"] == "agedb"
+    assert agedb["paired_supervision"]["weight"] == 0.20
+
+
+def test_explicit_high_level_paired_values_override_data_yaml():
+    config = load_training_config(REPO_ROOT / "configs/training/paired_fgnet_train.yaml")
+    config["paired_supervision"]["dataset"] = "agedb"
+    config["paired_supervision"]["weight"] = 0.10
+
+    from scripts.train_cli import resolve_paired_supervision_config
+
+    resolved = resolve_paired_supervision_config(config)
+    assert resolved["dataset"] == "agedb"
+    assert resolved["weight"] == 0.10
 
 
 def test_inference_cli_dry_run_validates_args_without_checkpoint_files():

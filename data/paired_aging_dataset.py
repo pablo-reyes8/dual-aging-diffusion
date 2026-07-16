@@ -8,9 +8,11 @@ lighting, background, and image quality are not aligned across time.
 
 from __future__ import annotations
 
+import json
 import random
 import re
 import shutil
+import time
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -28,6 +30,8 @@ KAGGLE_REFS = {
     "fgnet": "aiolapo/fgnet-dataset",
     "agedb": "shukdevdatta/agedb-classwise-dataset",
 }
+EXPECTED_MIN_IMAGES = {"fgnet": 900, "agedb": 16000}
+COMPLETE_MARKER = ".paired_dataset_complete.json"
 
 
 @dataclass(frozen=True)
@@ -54,35 +58,125 @@ def download_kaggle_paired_dataset(
     *,
     force: bool = False,
 ) -> Path:
-    """Download and extract one public Kaggle mirror without the Kaggle CLI."""
+    """Download once into a persistent cache and reuse verified extraction."""
     dataset = str(dataset).lower().strip()
     if dataset not in KAGGLE_REFS:
         raise ValueError(f"dataset must be one of {sorted(KAGGLE_REFS)}, got {dataset!r}")
 
     output_dir = Path(output_dir)
     extracted_dir = output_dir / dataset
-    if extracted_dir.exists() and any(extracted_dir.rglob("*")) and not force:
-        return extracted_dir
+    marker_path = extracted_dir / COMPLETE_MARKER
+    if extracted_dir.exists() and not force:
+        image_count = len(_find_image_files(extracted_dir))
+        marker_count = None
+        if marker_path.exists():
+            try:
+                marker = json.loads(marker_path.read_text(encoding="utf-8"))
+                if marker.get("dataset") == dataset:
+                    marker_count = int(marker.get("images", -1))
+            except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                marker_count = None
+        cache_is_complete = image_count >= EXPECTED_MIN_IMAGES[dataset]
+        cache_is_complete |= (
+            marker_count is not None
+            and marker_count >= EXPECTED_MIN_IMAGES[dataset]
+            and image_count >= marker_count
+        )
+        if cache_is_complete:
+            if not marker_path.exists():
+                marker_path.write_text(
+                    json.dumps({"dataset": dataset, "images": image_count}, indent=2),
+                    encoding="utf-8",
+                )
+            print(f"[Paired dataset cache hit] {dataset}: {extracted_dir} ({image_count} images)")
+            return extracted_dir
 
     output_dir.mkdir(parents=True, exist_ok=True)
     archive_path = output_dir / f"{dataset}.zip"
+    partial_archive = output_dir / f".{dataset}.zip.part"
     url = f"https://www.kaggle.com/api/v1/datasets/download/{KAGGLE_REFS[dataset]}"
-    urllib.request.urlretrieve(url, archive_path)
+    if force or not archive_path.exists():
+        print(f"[Downloading paired dataset] {dataset} <- {url}")
+        if partial_archive.exists():
+            partial_archive.unlink()
+        urllib.request.urlretrieve(url, partial_archive)
+        partial_archive.replace(archive_path)
+    else:
+        print(f"[Using cached archive] {archive_path}")
 
-    if force and extracted_dir.exists():
-        shutil.rmtree(extracted_dir)
-    extracted_dir.mkdir(parents=True, exist_ok=True)
+    extracting_dir = output_dir / f".{dataset}.extracting"
+    if extracting_dir.exists():
+        shutil.rmtree(extracting_dir)
+    extracting_dir.mkdir(parents=True, exist_ok=True)
 
     # Refuse zip-slip paths before extracting a third-party archive.
-    root = extracted_dir.resolve()
+    root = extracting_dir.resolve()
     with zipfile.ZipFile(archive_path) as archive:
+        bad_member = archive.testzip()
+        if bad_member is not None:
+            raise ValueError(f"Corrupted Kaggle archive member: {bad_member}")
         for member in archive.infolist():
             destination = (root / member.filename).resolve()
             if root not in destination.parents and destination != root:
                 raise ValueError(f"Unsafe archive member: {member.filename}")
         archive.extractall(root)
 
+    image_count = len(_find_image_files(extracting_dir))
+    if image_count < EXPECTED_MIN_IMAGES[dataset]:
+        raise ValueError(
+            f"Incomplete {dataset} extraction: found {image_count} images, "
+            f"expected at least {EXPECTED_MIN_IMAGES[dataset]}"
+        )
+    (extracting_dir / COMPLETE_MARKER).write_text(
+        json.dumps(
+            {
+                "dataset": dataset,
+                "kaggle_ref": KAGGLE_REFS[dataset],
+                "images": image_count,
+                "completed_unix": int(time.time()),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    if extracted_dir.exists():
+        shutil.rmtree(extracted_dir)
+    extracting_dir.replace(extracted_dir)
+    print(f"[Paired dataset ready] {dataset}: {extracted_dir} ({image_count} images)")
+
     return extracted_dir
+
+
+def ensure_paired_aging_dataset(
+    dataset: str,
+    *,
+    root: Optional[str | Path] = None,
+    cache_dir: str | Path = "data/external/paired_aging",
+    download_if_missing: bool = True,
+) -> Path:
+    """Resolve a custom dataset root or download/reuse the managed cache."""
+    dataset = str(dataset).lower().strip()
+    if dataset not in KAGGLE_REFS:
+        raise ValueError(f"dataset must be one of {sorted(KAGGLE_REFS)}")
+
+    if root is not None:
+        root_path = Path(root)
+        if _find_image_files(root_path):
+            print(f"[Using configured paired dataset] {root_path}")
+            return root_path
+        if not download_if_missing:
+            raise FileNotFoundError(f"No paired images found under configured root: {root_path}")
+        print(f"[Configured paired root missing] falling back to cache: {root_path}")
+
+    cache_dir = Path(cache_dir)
+    cached_root = cache_dir / dataset
+    if _find_image_files(cached_root):
+        return download_kaggle_paired_dataset(dataset, cache_dir, force=False)
+    if not download_if_missing:
+        raise FileNotFoundError(
+            f"{dataset} is not cached under {cache_dir} and download_if_missing=false"
+        )
+    return download_kaggle_paired_dataset(dataset, cache_dir, force=False)
 
 
 def _find_image_files(root: Path) -> List[Path]:

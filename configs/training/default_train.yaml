@@ -151,16 +151,9 @@ training:
 # does not load or execute anything from FG-NET/AgeDB.
 paired_supervision:
   enabled: false
-  root:
-  dataset: auto               # auto | fgnet | agedb
-  batch_size: 2
-  every_n_steps: 4            # one separate GT backward every 4 regular batches
-  weight: 0.25
-  min_age_gap: 5
-  max_age_gap: 40
-  max_pairs_per_identity: 8
-  min_image_side: 128         # AgeDB contains many very small thumbnails
-  val_fraction: 0.15          # split is identity-disjoint
+  # Cambiar por paired_agedb.yaml para usar AgeDB. Este archivo contiene todos
+  # los parámetros de descarga, pares, split y loss longitudinal.
+  config_path: configs/data/paired_fgnet.yaml
 
 sampling:
   enabled: false
