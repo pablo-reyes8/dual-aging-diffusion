@@ -628,6 +628,8 @@ def build_mixed_lora_dora_training_setup(
     global_adapter_config=None,
     local_adapter_config=None,
     optimizer_config=None,
+    global_optimizer_config=None,
+    local_optimizer_config=None,
     freeze_before_injection=True,
     print_memory=True,
     print_reports=True,
@@ -654,7 +656,7 @@ def build_mixed_lora_dora_training_setup(
             "adapter_type": "lora",
             "rank": 8,
             "alpha": 8,
-            "dropout": 0.0,
+            "dropout": 0.05,
             "target_suffixes": ["to_q", "to_k", "to_v", "to_out.0"],
         }
 
@@ -667,12 +669,27 @@ def build_mixed_lora_dora_training_setup(
             "target_suffixes": ["to_q", "to_k", "to_v", "to_out.0"],
         }
 
+    using_recommended_optimizer_defaults = optimizer_config is None
     if optimizer_config is None:
         optimizer_config = {
-            "lr": 1e-4,
+            "lr": 7e-5,
             "betas": (0.9, 0.999),
             "weight_decay": 1e-2,
         }
+
+    if using_recommended_optimizer_defaults and global_optimizer_config is None:
+        global_optimizer_config = {"lr": 5e-5}
+
+    # Branch-specific overrides are optional. Existing calls that only pass
+    # optimizer_config retain exactly the previous shared-optimizer behavior.
+    global_optimizer_config = {
+        **optimizer_config,
+        **(global_optimizer_config or {}),
+    }
+    local_optimizer_config = {
+        **optimizer_config,
+        **(local_optimizer_config or {}),
+    }
 
     global_adapter_name = global_adapter_config["adapter_type"].upper()
     local_adapter_name = local_adapter_config["adapter_type"].upper()
@@ -733,16 +750,16 @@ def build_mixed_lora_dora_training_setup(
     # --------------------------------------------------------
     global_optimizer, global_trainable_names = build_optimizer_for_existing_bundle(
         bundle=global_bundle,
-        lr=optimizer_config["lr"],
-        betas=optimizer_config["betas"],
-        weight_decay=optimizer_config["weight_decay"],
+        lr=global_optimizer_config["lr"],
+        betas=global_optimizer_config["betas"],
+        weight_decay=global_optimizer_config["weight_decay"],
     )
 
     local_optimizer, local_trainable_names = build_optimizer_for_existing_bundle(
         bundle=local_bundle,
-        lr=optimizer_config["lr"],
-        betas=optimizer_config["betas"],
-        weight_decay=optimizer_config["weight_decay"],
+        lr=local_optimizer_config["lr"],
+        betas=local_optimizer_config["betas"],
+        weight_decay=local_optimizer_config["weight_decay"],
     )
 
     # --------------------------------------------------------

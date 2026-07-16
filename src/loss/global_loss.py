@@ -51,9 +51,9 @@ class GlobalAgingLoss(nn.Module):
         global_loss_bundle: nn.Module,
 
         lambda_diff: float = 1.0,
-        lambda_id: float = 0.5,
-        lambda_age: float = 0.25,
-        lambda_delta_age: float = 0.25,
+        lambda_id: float = 0.35,
+        lambda_age: float = 0.10,
+        lambda_delta_age: float = 0.15,
         lambda_perc: float = 0.0,
 
         # Age losses are normalized to avoid huge gradients.
@@ -69,8 +69,8 @@ class GlobalAgingLoss(nn.Module):
 
         # Semantic one-step x0 estimate timestep range.
         # Usually lower than full range for more stable decoded images.
-        semantic_timestep_min: int = 20,
-        semantic_timestep_max: int = 300,
+        semantic_timestep_min: int = 5,
+        semantic_timestep_max: int = 120,
 
         # Which semantic losses are active by default in semantic mode.
         # Forward can override this.
@@ -92,12 +92,15 @@ class GlobalAgingLoss(nn.Module):
         # ----------------------------------------------------------------
         semantic_loss_mode: str = "1_step_per_loss",
         semantic_anchor_to_source: bool = True,
+        # "chronological_gap" keeps delta-age distinct from absolute age.
+        # "estimator_anchor" preserves the previous (duplicated) objective.
+        delta_age_target_mode: str = "chronological_gap",
         full_ddim_num_steps: int = 10,
         full_ddim_max_timestep: int = 120,
 
         # Min-SNR-gamma reweighting of the diffusion (diff) loss.
-        # Off by default to keep the baseline unchanged.
-        use_min_snr: bool = False,
+        # Enabled by default for a more stable timestep balance.
+        use_min_snr: bool = True,
         min_snr_gamma: float = 5.0,
 
         device: Optional[str] = None,
@@ -115,6 +118,13 @@ class GlobalAgingLoss(nn.Module):
 
         self.semantic_loss_mode = semantic_loss_mode
         self.semantic_anchor_to_source = bool(semantic_anchor_to_source)
+        valid_delta_modes = {"chronological_gap", "estimator_anchor"}
+        self.delta_age_target_mode = str(delta_age_target_mode).lower().strip()
+        if self.delta_age_target_mode not in valid_delta_modes:
+            raise ValueError(
+                f"Invalid delta_age_target_mode={delta_age_target_mode!r}; "
+                f"expected one of {sorted(valid_delta_modes)}"
+            )
         self.full_ddim_num_steps = int(full_ddim_num_steps)
         self.full_ddim_max_timestep = int(full_ddim_max_timestep)
         self.use_min_snr = bool(use_min_snr)
@@ -218,6 +228,7 @@ class GlobalAgingLoss(nn.Module):
         print("semantic timestep range:", self.semantic_timestep_min, self.semantic_timestep_max)
         print("semantic_loss_mode:", self.semantic_loss_mode)
         print("semantic_anchor_to_source:", self.semantic_anchor_to_source)
+        print("delta_age_target_mode:", self.delta_age_target_mode)
         if self.semantic_loss_mode == "full_ddim":
             print("full_ddim_num_steps:", self.full_ddim_num_steps)
             print("full_ddim_max_timestep:", self.full_ddim_max_timestep)
@@ -681,12 +692,14 @@ class GlobalAgingLoss(nn.Module):
                         grad_to_input=False,
                     ).float().view(-1)
 
-                # Error 6 fix: anchor the desired delta to the SAME estimator
-                # (ViT) source prediction, not to the CSV `source_ages`. Mixing
-                # CSV ages with ViT predictions made the delta target biased by
-                # the systematic offset between the two age models.
                 age_src_anchor = age_src_pred.detach()
-                target_delta = target_ages - age_src_anchor
+                if self.delta_age_target_mode == "chronological_gap":
+                    # This is the actual requested change. Using the ViT source
+                    # as both target and prediction anchor makes delta_age
+                    # algebraically identical to the absolute age loss.
+                    target_delta = target_ages - source_ages
+                else:
+                    target_delta = target_ages - age_src_anchor
                 pred_delta = age_gen_pred - age_src_anchor
 
                 loss_delta_age_per = (

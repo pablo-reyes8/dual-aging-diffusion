@@ -93,6 +93,13 @@ def train_global_local_face_aging(
     # True classifier-free-guidance dropout for the local branch (empty-prompt).
     local_p_uncond: float = 0.0,
 
+    # Optional supervised longitudinal crops. Disabled unless all four values
+    # are configured; old notebook calls therefore keep identical behavior.
+    local_paired_train_loader=None,
+    local_paired_loss_fn=None,
+    local_paired_every_n_steps: int = 0,
+    local_paired_weight: float = 0.0,
+
     # Optional local deterministic fused loss.
     local_fused_train_loader=None,
     local_fused_loss_fn=None,
@@ -104,15 +111,21 @@ def train_global_local_face_aging(
     fused_global_forward_fn: Optional[Callable] = None,
 
     # Global loss mode config.
-    global_p_diff: float = 0.55,
-    global_p_semantic: float = 0.45,
+    global_p_diff: float = 0.70,
+    global_p_semantic: float = 0.30,
     global_enable_diff: bool = True,
     global_enable_semantic: bool = True,
     global_semantic_components: Tuple[str, ...] = ("age", "delta_age", "id"),
-    global_p_neutral: float = 0.10,
+    global_p_neutral: float = 0.05,
     global_p_double_diff: float = 0.05,
     min_target_age: int = 18,
-    max_target_age: int = 90,
+    max_target_age: int = 85,
+
+    # Optional supervised longitudinal full faces (FG-NET/AgeDB).
+    global_paired_train_loader=None,
+    global_paired_loss_fn=None,
+    global_paired_every_n_steps: int = 0,
+    global_paired_weight: float = 0.0,
 
     # Schedulers.
     build_schedulers_if_missing: bool = True,
@@ -497,6 +510,11 @@ def train_global_local_face_aging(
                     fused_loss_every_n_steps=fused_loss_every_n_steps,
                     fused_global_forward_fn=fused_global_forward_fn,
 
+                    paired_train_loader=local_paired_train_loader,
+                    paired_loss_fn=local_paired_loss_fn,
+                    paired_every_n_steps=local_paired_every_n_steps,
+                    paired_weight=local_paired_weight,
+
                     print_every=inner_print_every,
                     print_first_batch=print_first_batch,
                     verbose=inner_verbose,
@@ -663,6 +681,11 @@ def train_global_local_face_aging(
                     max_target_age=max_target_age,
 
                     p_double_diff=global_p_double_diff,
+
+                    paired_train_loader=global_paired_train_loader,
+                    paired_loss_fn=global_paired_loss_fn,
+                    paired_every_n_steps=global_paired_every_n_steps,
+                    paired_weight=global_paired_weight,
 
                     grad_accum_steps=global_grad_accum_steps,
                     grad_clip=global_grad_clip,

@@ -24,6 +24,11 @@ from src.training.target_prompt_building import (
     remove_age_from_global_prompt,
     remove_score_from_local_prompt,
 )
+from src.training.training_loss_helpers import (
+    next_cycling_batch,
+    paired_supervision_enabled,
+    should_run_paired_supervision,
+)
 
 
 def test_scheduler_warmup_cosine_state_and_lr_bounds():
@@ -140,3 +145,20 @@ def test_adapter_checkpoint_roundtrip_and_atomic_save(tmp_path):
     atomic_torch_save({"adapter": state}, path)
     loaded = torch_load_cpu(path)
     assert loaded["adapter"].keys() == state.keys()
+
+
+def test_optional_paired_supervision_schedule_and_loader_cycle():
+    loader = [[{"value": 1}], [{"value": 2}]]
+    loss_fn = lambda batch: {"loss": torch.ones(())}
+    assert not paired_supervision_enabled(None, None, 0, 0.0)
+    assert paired_supervision_enabled(loader, loss_fn, 4, 0.25)
+    assert [should_run_paired_supervision(i, 4) for i in range(5)] == [
+        False, False, False, True, False
+    ]
+
+    iterator = iter(loader)
+    first, iterator = next_cycling_batch(loader, iterator)
+    second, iterator = next_cycling_batch(loader, iterator)
+    restarted, iterator = next_cycling_batch(loader, iterator)
+    assert first == restarted
+    assert first != second

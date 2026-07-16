@@ -35,8 +35,8 @@ from src.training.train_one_epoch_local import *
 # ============================================================
 
 def normalize_global_loss_mode_probs(
-    p_diff: float = 0.55,
-    p_semantic: float = 0.45,
+    p_diff: float = 0.70,
+    p_semantic: float = 0.30,
     enable_diff: bool = True,
     enable_semantic: bool = True,
 ) -> Dict[str, float]:
@@ -74,8 +74,8 @@ def normalize_global_loss_mode_probs(
 
 
 def sample_global_loss_mode(
-    p_diff: float = 0.55,
-    p_semantic: float = 0.45,
+    p_diff: float = 0.70,
+    p_semantic: float = 0.30,
     enable_diff: bool = True,
     enable_semantic: bool = True,
 ) -> str:
@@ -262,8 +262,8 @@ def train_one_epoch_global(
     scaler=None,
 
     # Loss mode probabilities.
-    p_diff: float = 0.55,
-    p_semantic: float = 0.45,
+    p_diff: float = 0.70,
+    p_semantic: float = 0.30,
     enable_diff: bool = True,
     enable_semantic: bool = True,
 
@@ -271,12 +271,18 @@ def train_one_epoch_global(
     semantic_components: Tuple[str, ...] = ("age", "delta_age", "id"),
 
     # Prompt construction.
-    p_neutral: float = 0.10,
+    p_neutral: float = 0.05,
     min_target_age: int = 18,
-    max_target_age: int = 90,
+    max_target_age: int = 85,
 
     # Explicit double-prompt.
     p_double_diff: float = 0.10,
+
+    # Optional real longitudinal supervision (FG-NET/AgeDB bundle).
+    paired_train_loader=None,
+    paired_loss_fn=None,
+    paired_every_n_steps: int = 0,
+    paired_weight: float = 0.0,
 
     # Optimization.
     grad_accum_steps: int = 1,
@@ -405,6 +411,11 @@ def train_one_epoch_global(
     n_optimizer_steps_epoch = 0
     skipped_steps = 0
     double_prompt_steps = 0
+    paired_enabled = paired_supervision_enabled(
+        paired_train_loader, paired_loss_fn, paired_every_n_steps, paired_weight
+    )
+    paired_iter = iter(paired_train_loader) if paired_enabled else None
+    paired_loss_steps = 0
 
     optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
@@ -638,6 +649,47 @@ def train_one_epoch_global(
 
             loss_out["double_prompt/used"] = torch.tensor(0.0)
 
+        # Separate GT forward: exact-age denoising on a real longitudinal pair.
+        paired_out = None
+        run_paired = paired_enabled and should_run_paired_supervision(
+            batch_idx, paired_every_n_steps
+        )
+        if run_paired:
+            paired_batch, paired_iter = next_cycling_batch(
+                paired_train_loader, paired_iter
+            )
+            paired_batch = move_batch_to_device(paired_batch, device)
+            with autocast_ctx(
+                device=device,
+                enabled=amp_enabled,
+                amp_dtype=amp_dtype,
+                cache_enabled=True,
+            ):
+                paired_out = call_paired_supervision_loss(paired_loss_fn, paired_batch)
+                raw_paired_loss = paired_out["loss"]
+                paired_loss = (
+                    float(paired_weight) * raw_paired_loss / float(grad_accum_steps)
+                )
+            if skip_nonfinite_loss and not torch.isfinite(raw_paired_loss.detach()).all():
+                skipped_steps += 1
+                optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
+                print("[WARN] Non-finite GLOBAL paired supervision loss; skipping gradients.")
+                continue
+            backward_with_optional_scaler(
+                loss=paired_loss,
+                optimizer=optimizer,
+                scaler=scaler,
+                retain_graph=False,
+            )
+            paired_loss_steps += 1
+            loss_out["loss"] = (
+                loss_out["loss"].detach()
+                + float(paired_weight) * raw_paired_loss.detach()
+            )
+            loss_out["paired/used"] = torch.tensor(1.0)
+        else:
+            loss_out["paired/used"] = torch.tensor(0.0)
+
         # --------------------------------------------------------
         # Counters.
         # Double-prompt still counts as one micro-step for
@@ -659,6 +711,15 @@ def train_one_epoch_global(
         )
 
         batch_metrics["double_prompt/used"] = 1.0 if use_double_prompt else 0.0
+        batch_metrics["paired/used"] = 1.0 if run_paired else 0.0
+        if paired_out is not None:
+            batch_metrics["paired/loss"] = float(
+                paired_out["loss"].detach().float().cpu().item()
+            )
+            if "age_gap_mean" in paired_out:
+                batch_metrics["paired/age_gap_mean"] = float(
+                    paired_out["age_gap_mean"].detach().float().cpu().item()
+                )
 
         if use_double_prompt:
             batch_metrics["double_prompt/source_loss"] = float(
@@ -758,6 +819,7 @@ def train_one_epoch_global(
         "optimizer_step": int(optimizer_step),
         "n_micro_steps": int(n_micro_steps),
         "n_optimizer_steps_epoch": int(n_optimizer_steps_epoch),
+        "paired_loss_steps": int(paired_loss_steps),
         "double_prompt_steps": int(double_prompt_steps),
         "double_prompt_fraction": float(double_prompt_steps / max(1, n_micro_steps)),
         "skipped_steps": int(skipped_steps)}

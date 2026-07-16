@@ -31,7 +31,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "adapter_type": "lora",
             "rank": 8,
             "alpha": 8,
-            "dropout": 0.0,
+            "dropout": 0.05,
             "target_suffixes": ["to_q", "to_k", "to_v", "to_out.0"],
         },
         "local": {
@@ -41,7 +41,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "dropout": 0.05,
             "target_suffixes": ["to_q", "to_k", "to_v", "to_out.0"],
         },
-        "optimizer": {"lr": 1.0e-4, "betas": [0.9, 0.999], "weight_decay": 1.0e-2},
+        "optimizer": {"lr": 7.0e-5, "betas": [0.9, 0.999], "weight_decay": 1.0e-2},
+        "global_optimizer": {"lr": 5.0e-5},
+        "local_optimizer": {"lr": 7.0e-5},
     },
     "score_net": {
         "checkpoint_path": None,
@@ -56,21 +58,31 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "lambda_zone": 0.25,
             "lambda_score": 0.05,
             "lambda_cycle": 0.0,
+            "score_timestep_min": 5,
+            "score_timestep_max": 150,
+            "score_loss_mode": "1_step_per_loss",
+            "use_min_snr": True,
+            "min_snr_gamma": 5.0,
         },
         "global": {
             "use_aux_bundle": True,
             "aux": {"use_age": True, "use_identity": True, "use_lpips": False},
             "lambda_diff": 1.0,
-            "lambda_id": 0.5,
-            "lambda_age": 0.25,
-            "lambda_delta_age": 0.25,
+            "lambda_id": 0.35,
+            "lambda_age": 0.10,
+            "lambda_delta_age": 0.15,
             "lambda_perc": 0.0,
+            "semantic_timestep_min": 5,
+            "semantic_timestep_max": 120,
+            "semantic_anchor_to_source": True,
+            "delta_age_target_mode": "chronological_gap",
+            "use_min_snr": True,
         },
     },
     "training": {
         "num_epochs": 5,
-        "local_num_epochs": None,
-        "global_num_epochs": None,
+        "local_num_epochs": 5,
+        "global_num_epochs": 2,
         "train_order": ["local", "global"],
         "train_local": True,
         "train_global": True,
@@ -86,11 +98,33 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "fused_loss_every_n_steps": 1,
         "lambda_fuse_score": 0.03,
         "lambda_fuse_seam": 0.01,
+        "global_p_diff": 0.70,
+        "global_p_semantic": 0.30,
+        "global_p_neutral": 0.05,
+        "global_p_double_diff": 0.05,
+        "min_target_age": 18,
+        "max_target_age": 85,
+    },
+    "paired_supervision": {
+        "enabled": False,
+        "root": None,
+        "dataset": "auto",
+        "batch_size": 2,
+        "every_n_steps": 4,
+        "weight": 0.25,
+        "min_age_gap": 5,
+        "max_age_gap": 40,
+        "max_pairs_per_identity": 8,
+        "min_image_side": 128,
+        "val_fraction": 0.15,
     },
     "sampling": {
         "enabled": False,
         "sample_every_epochs": 0,
         "sampling_output_dir": None,
+        "sample_global_strength": 0.25,
+        "sample_global_guidance_scale": 3.5,
+        "sample_global_num_inference_steps": 40,
     },
 }
 
@@ -191,6 +225,8 @@ def build_model_bundles(config: Dict[str, Any], device: torch.device, dtype: tor
         global_adapter_config=adapter_cfg["global"],
         local_adapter_config=adapter_cfg["local"],
         optimizer_config=optimizer_config,
+        global_optimizer_config=adapter_cfg.get("global_optimizer"),
+        local_optimizer_config=adapter_cfg.get("local_optimizer"),
         freeze_before_injection=True,
         print_memory=True,
         print_reports=True,
@@ -251,6 +287,40 @@ def build_losses(
     return local_loss, global_loss
 
 
+def build_global_paired_supervision(config, mixed_global_bundle, device):
+    paired_cfg = config.get("paired_supervision", {})
+    if not bool(paired_cfg.get("enabled", False)):
+        return None, None
+    root = paired_cfg.get("root")
+    if not root:
+        raise ValueError("paired_supervision.enabled=true requires paired_supervision.root")
+
+    from data.paired_aging_dataset import build_paired_aging_dataloaders
+    from src.loss.paired_supervision_loss import PairedDiffusionSupervisionLoss
+
+    objects = build_paired_aging_dataloaders(
+        root=root,
+        dataset=paired_cfg.get("dataset", "auto"),
+        batch_size=int(paired_cfg.get("batch_size", 2)),
+        val_fraction=float(paired_cfg.get("val_fraction", 0.15)),
+        min_age_gap=int(paired_cfg.get("min_age_gap", 5)),
+        max_age_gap=int(paired_cfg.get("max_age_gap", 40)),
+        max_pairs_per_identity=paired_cfg.get("max_pairs_per_identity", 8),
+        min_image_side=int(paired_cfg.get("min_image_side", 128)),
+        num_workers=int(config["data"].get("num_workers", 0)),
+        pin_memory=bool(config["data"].get("pin_memory", False)),
+    )
+    loss_fn = PairedDiffusionSupervisionLoss(
+        mixed_global_bundle,
+        lambda_target_diff=1.0,
+        lambda_source_diff=0.25,
+        lambda_latent_delta=0.0,
+        use_min_snr=True,
+        device=str(device),
+    )
+    return objects["train_loader"], loss_fn
+
+
 def main() -> None:
     args = parse_args()
     config = deep_update(DEFAULT_CONFIG, load_config(args.config))
@@ -273,6 +343,9 @@ def main() -> None:
     local_objects, global_objects, local_fused_objects = build_data(config)
     mixed_global_bundle, mixed_local_bundle = build_model_bundles(config, device, dtype)
     local_loss, global_loss = build_losses(config, mixed_global_bundle, mixed_local_bundle, device)
+    global_paired_loader, global_paired_loss = build_global_paired_supervision(
+        config, mixed_global_bundle, device
+    )
 
     from src.training.train_aging_model import train_global_local_face_aging
 
@@ -281,9 +354,9 @@ def main() -> None:
     sampling_kwargs = {
         "sample_every_epochs": int(sampling_cfg.get("sample_every_epochs", 0)),
         "sampling_output_dir": sampling_cfg.get("sampling_output_dir"),
-        "sample_global_strength": float(sampling_cfg.get("sample_global_strength", 0.30)),
-        "sample_global_guidance_scale": float(sampling_cfg.get("sample_global_guidance_scale", 5.0)),
-        "sample_global_num_inference_steps": int(sampling_cfg.get("sample_global_num_inference_steps", 35)),
+        "sample_global_strength": float(sampling_cfg.get("sample_global_strength", 0.25)),
+        "sample_global_guidance_scale": float(sampling_cfg.get("sample_global_guidance_scale", 3.5)),
+        "sample_global_num_inference_steps": int(sampling_cfg.get("sample_global_num_inference_steps", 40)),
         "sample_global_negative_prompt": sampling_cfg.get("sample_global_negative_prompt"),
         "sample_local_strength": float(sampling_cfg.get("sample_local_strength", 0.20)),
         "sample_local_guidance_scale": float(sampling_cfg.get("sample_local_guidance_scale", 0.8)),
@@ -315,6 +388,14 @@ def main() -> None:
         ),
         local_loss_fn=local_loss,
         global_loss_fn=global_loss,
+        global_paired_train_loader=global_paired_loader,
+        global_paired_loss_fn=global_paired_loss,
+        global_paired_every_n_steps=int(
+            config.get("paired_supervision", {}).get("every_n_steps", 0)
+        ) if global_paired_loader is not None else 0,
+        global_paired_weight=float(
+            config.get("paired_supervision", {}).get("weight", 0.0)
+        ) if global_paired_loader is not None else 0.0,
         device=device,
         amp_enabled=bool(config["device"]["amp_enabled"]),
         amp_dtype=str(config["device"]["amp_dtype"]),

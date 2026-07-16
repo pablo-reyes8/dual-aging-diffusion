@@ -53,8 +53,8 @@ class LDLALocalAgingLoss(nn.Module):
         freeze_score_net: bool = True,
         score_net_input_dtype: torch.dtype = torch.float32,
         device: Optional[str] = None,
-        score_timestep_min: int = 20,
-        score_timestep_max: int = 400,
+        score_timestep_min: int = 5,
+        score_timestep_max: int = 150,
 
         # ----------------------------------------------------------------
         # Score-edit generation mode (Error 1 fix), mirrors the global loss.
@@ -67,8 +67,8 @@ class LDLALocalAgingLoss(nn.Module):
         full_ddim_max_timestep: int = 120,
 
         # Min-SNR-gamma reweighting of the full/zone diffusion losses.
-        # Off by default (baseline unchanged).
-        use_min_snr: bool = False,
+        # Enabled by default for a more stable timestep balance.
+        use_min_snr: bool = True,
         min_snr_gamma: float = 5.0,
 
         # ----------------------------------------------------------------

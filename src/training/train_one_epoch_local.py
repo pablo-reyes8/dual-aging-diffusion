@@ -23,6 +23,7 @@ import torch
 from src.training.mixed_precision import * 
 from src.training.target_prompt_building import *  
 from src.training.metrics import * 
+from src.training.training_loss_helpers import *
 
 
 # ============================================================
@@ -483,6 +484,13 @@ def train_one_epoch_local(
     fused_loss_every_n_steps: int = 1,
     fused_global_forward_fn=None,
 
+    # Optional real longitudinal supervision. For the local branch the loader
+    # must contain paired, aligned LOCAL CROPS with local-compatible prompts.
+    paired_train_loader=None,
+    paired_loss_fn=None,
+    paired_every_n_steps: int = 0,
+    paired_weight: float = 0.0,
+
     # Logging.
     print_every: int = 50,
     print_first_batch: bool = True,
@@ -637,6 +645,12 @@ def train_one_epoch_local(
         if local_fused_loss_fn is None:
             raise ValueError("use_fused_loss=True requires local_fused_loss_fn.")
         fused_iter = iter(fused_train_loader)
+
+    paired_enabled = paired_supervision_enabled(
+        paired_train_loader, paired_loss_fn, paired_every_n_steps, paired_weight
+    )
+    paired_iter = iter(paired_train_loader) if paired_enabled else None
+    paired_loss_steps = 0
 
     optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
 
@@ -1004,6 +1018,50 @@ def train_one_epoch_local(
             loss_out["fused/used"] = torch.tensor(0.0)
 
         # --------------------------------------------------------
+        # Optional longitudinal GT batch. It is a separate backward pass and
+        # therefore does not keep the ordinary crop graph alive in memory.
+        # --------------------------------------------------------
+        paired_out = None
+        run_paired = paired_enabled and should_run_paired_supervision(
+            batch_idx, paired_every_n_steps
+        )
+        if run_paired:
+            paired_batch, paired_iter = next_cycling_batch(
+                paired_train_loader, paired_iter
+            )
+            paired_batch = move_batch_to_device(paired_batch, device)
+            with autocast_ctx(
+                device=device,
+                enabled=amp_enabled,
+                amp_dtype=amp_dtype,
+                cache_enabled=True,
+            ):
+                paired_out = call_paired_supervision_loss(paired_loss_fn, paired_batch)
+                raw_paired_loss = paired_out["loss"]
+                paired_loss = (
+                    float(paired_weight) * raw_paired_loss / float(grad_accum_steps)
+                )
+            if skip_nonfinite_loss and not torch.isfinite(raw_paired_loss.detach()).all():
+                skipped_steps += 1
+                optimizer.zero_grad(set_to_none=zero_grad_set_to_none)
+                print("[WARN] Non-finite LOCAL paired supervision loss; skipping gradients.")
+                continue
+            backward_with_optional_scaler(
+                loss=paired_loss,
+                optimizer=optimizer,
+                scaler=scaler,
+                retain_graph=False,
+            )
+            paired_loss_steps += 1
+            loss_out["loss"] = (
+                loss_out["loss"].detach()
+                + float(paired_weight) * raw_paired_loss.detach()
+            )
+            loss_out["paired/used"] = torch.tensor(1.0)
+        else:
+            loss_out["paired/used"] = torch.tensor(0.0)
+
+        # --------------------------------------------------------
         # Counters.
         # Important:
         #   A double-prompt step still counts as one micro-step
@@ -1026,6 +1084,11 @@ def train_one_epoch_local(
 
         batch_metrics["double_prompt/used"] = 1.0 if use_double_prompt else 0.0
         batch_metrics["fused/used"] = 1.0 if run_fused else 0.0
+        batch_metrics["paired/used"] = 1.0 if run_paired else 0.0
+        if paired_out is not None:
+            batch_metrics["paired/loss"] = float(
+                paired_out["loss"].detach().float().cpu().item()
+            )
 
         if use_double_prompt:
             batch_metrics["double_prompt/source_loss"] = float(
@@ -1129,5 +1192,6 @@ def train_one_epoch_local(
         "double_prompt_steps": int(double_prompt_steps),
         "double_prompt_fraction": float(double_prompt_steps / max(1, n_micro_steps)),
         "fused_loss_steps": int(fused_loss_steps),
+        "paired_loss_steps": int(paired_loss_steps),
         "skipped_steps": int(skipped_steps),
     }

@@ -45,3 +45,42 @@ def get_monitor_metric(
             return float(metrics[k])
 
     return None
+
+
+# ============================================================
+# Optional paired-supervision helpers
+# ============================================================
+
+def paired_supervision_enabled(
+    loader,
+    loss_fn,
+    every_n_steps: int,
+    weight: float,
+) -> bool:
+    provided = (loader is not None, loss_fn is not None)
+    if any(provided) and not all(provided):
+        raise ValueError("paired_train_loader and paired_loss_fn must be passed together")
+    if every_n_steps < 0:
+        raise ValueError("paired_every_n_steps must be >= 0")
+    if weight < 0:
+        raise ValueError("paired_weight must be >= 0")
+    return all(provided) and int(every_n_steps) > 0 and float(weight) > 0.0
+
+
+def should_run_paired_supervision(batch_idx: int, every_n_steps: int) -> bool:
+    return int(every_n_steps) > 0 and (int(batch_idx) + 1) % int(every_n_steps) == 0
+
+
+def next_cycling_batch(loader, iterator):
+    try:
+        return next(iterator), iterator
+    except StopIteration:
+        iterator = iter(loader)
+        return next(iterator), iterator
+
+
+def call_paired_supervision_loss(loss_fn, batch: Dict[str, Any]) -> Dict[str, Any]:
+    output = loss_fn(batch)
+    if not isinstance(output, dict) or "loss" not in output:
+        raise TypeError("paired_loss_fn(batch) must return a dict containing key 'loss'")
+    return output
