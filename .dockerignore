@@ -8,7 +8,10 @@ __pycache__
 .venv
 venv
 env
-notebooks
+# Keep the YAML-driven notebooks available in the training image while keeping
+# the explicitly ignored local notebook out of build contexts.
+notebooks/full_model_notebook.ipynb
+notebooks/.ipynb_checkpoints
 planning
 outputs
 training_checkpoints

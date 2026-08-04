@@ -121,7 +121,8 @@ diffusion_aging/
 |   `-- utils/                     Shared utilities
 |
 |-- tests/                         Pytest smoke tests and module contracts
-|-- Dockerfile
+|-- docker/                        CPU verification and CUDA training Dockerfiles
+|-- Dockerfile                     Backwards-compatible CPU smoke image
 |-- pyproject.toml
 `-- requirements*.txt
 ```
@@ -272,19 +273,111 @@ pytest -q
 Current local validation:
 
 ```text
-26 passed
+41 passed
 ```
 
 CI is defined in [`.github/workflows/tests.yml`](.github/workflows/tests.yml). It runs when code, configs, scripts, tests, dependency files, or workflow files change.
 
 ## Docker
 
-Build and run the CPU smoke-test image:
+There are two intentionally different images. The CPU image is for local
+verification and never installs CUDA. The training image is based on the
+official CUDA-enabled PyTorch runtime and is the image to send to an NVIDIA
+server. Neither image starts a training job by default.
+
+### CPU verification image
+
+Build and run the tests (no GPU and no model download):
 
 ```bash
-docker build -t diffusion-aging .
-docker run --rm diffusion-aging
+docker build -f docker/Dockerfile.cpu -t diffusion-aging:cpu .
+docker run --rm --network none diffusion-aging:cpu
 ```
+
+The legacy command `docker build -t diffusion-aging .` remains supported through
+the root `Dockerfile` and is equivalent to the CPU smoke image.
+
+### CUDA training image
+
+The CUDA image uses `pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime`, includes the
+same project dependencies plus JupyterLab/nbconvert, and keeps the CUDA
+PyTorch build supplied by the base image. Build it on a machine with Docker
+network access (a GPU is not required just to build):
+
+```bash
+docker build -f docker/Dockerfile.cuda -t diffusion-aging:cuda .
+```
+
+On the training server, Docker must have the NVIDIA Container Toolkit. Verify
+the host and the container before starting a real run:
+
+```bash
+nvidia-smi
+docker run --rm --gpus all diffusion-aging:cuda \
+  python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+
+The default container command is a safe YAML dry-run. It validates the
+high-level configuration without loading diffusion weights or datasets:
+
+```bash
+docker run --rm --gpus all --network none diffusion-aging:cuda
+docker run --rm --gpus all --network none diffusion-aging:cuda \
+  python -m scripts.train_cli \
+  --config configs/training/paired_fgnet_train.yaml --dry-run
+```
+
+### Launching training on the server
+
+Training is explicit and requires access to the external dataset and model
+cache. Mount the repository data, local checkpoints, and output directory so
+that they persist when the container is removed:
+
+```bash
+docker run --rm --gpus all --ipc=host --shm-size=16g \
+  -v "$PWD":/workspace/diffusion-aging \
+  diffusion-aging:cuda \
+  python -m scripts.train_cli \
+  --config configs/training/default_train.yaml
+```
+
+For paired supervision, select `paired_fgnet_train.yaml` or
+`paired_agedb_train.yaml`. The command can be replaced with any YAML-compatible
+CLI invocation; do not use `--network none` for a real run because Hugging Face
+and optional paired-data assets may need to be downloaded. Checkpoints are
+written under the mounted `training_checkpoints/` directory.
+
+### YAML notebook workflow
+
+`notebooks/train_model_yaml.ipynb` uses the same `load_training_config` and
+`run_training` entrypoints as the CLI. Start Jupyter on the CUDA server with
+the repository mounted:
+
+```bash
+docker run --rm -it --gpus all --ipc=host --shm-size=16g \
+  -p 8888:8888 \
+  -v "$PWD":/workspace/diffusion-aging \
+  diffusion-aging:cuda \
+  jupyter lab --ip=0.0.0.0 --no-browser --allow-root
+```
+
+Open `notebooks/train_model_yaml.ipynb`, choose the desired YAML, run its
+validation cell first, and only then execute the training cell. The ignored
+`notebooks/full_model_notebook.ipynb` is deliberately excluded from Docker
+contexts; the YAML-driven notebooks remain available in the image.
+
+### Cleanup after verification
+
+The verification containers are disposable. Remove a temporary image and its
+unused build cache after testing:
+
+```bash
+docker image rm diffusion-aging:cpu diffusion-aging:cuda
+docker builder prune -af
+```
+
+Do not run the cleanup commands on a shared server if the cache is used by
+other projects.
 
 ## Scope and Limitations
 

@@ -56,19 +56,29 @@ README-only changes are not expected to trigger the full test workflow.
 
 ## Docker
 
-The Dockerfile is intended for CPU smoke testing and reproducible development checks.
+Two Dockerfiles are provided under `docker/`: one CPU-only image for local
+verification and one CUDA-enabled image for training servers. The root
+`Dockerfile` remains as a backwards-compatible alias for the CPU workflow.
 
-Build:
-
-```bash
-docker build -t diffusion-aging .
-```
-
-Run tests:
+CPU build and tests:
 
 ```bash
-docker run --rm diffusion-aging
+docker build -f docker/Dockerfile.cpu -t diffusion-aging:cpu .
+docker run --rm --network none diffusion-aging:cpu
 ```
+
+CUDA training image:
+
+```bash
+docker build -f docker/Dockerfile.cuda -t diffusion-aging:cuda .
+docker run --rm --gpus all --network none diffusion-aging:cuda
+```
+
+The CUDA image's default command is a dry-run. Start a real job explicitly with
+`python -m scripts.train_cli --config ...`; mount `data/`, `models/`, and
+`training_checkpoints/` from the server. It also contains JupyterLab for
+`notebooks/train_model_yaml.ipynb`. Full training and model downloads are not
+part of the CPU test suite.
 
 ## Dependency Files
 
