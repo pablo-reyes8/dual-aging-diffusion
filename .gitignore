@@ -29,7 +29,8 @@ dist/
 *.egg-info/
 
 # Project outputs
-outputs/
+outputs/*
+!outputs/METODOLOGIA_PIPELINE_ENVEJECIMIENTO.md
 training_checkpoints/
 change_logs/
 artifacts/
@@ -60,4 +61,7 @@ Thumbs.db
 .DS_Store
 
 /planning 
+
+# Large exploratory notebook; keep the local copy outside version control.
+notebooks/full_model_notebook.ipynb
 
