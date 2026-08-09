@@ -35,6 +35,22 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "local_strength": 0.20,
         "local_guidance_scale": 0.8,
         "local_num_inference_steps": 40,
+        "local_generation_method": "img2img",
+        "local_inversion": {
+            "enabled": False,
+            "method": "ddim",
+            "num_steps": 40,
+            "strength": 0.45,
+            "inversion_guidance_scale": 1.0,
+            "edit_guidance_scale": None,
+            "source_score_mode": "auto",
+            "source_prompt_fallback": "zone",
+            "negative_prompt_during_inversion": False,
+            "return_source_reconstruction": False,
+            "cache_enabled": True,
+            "post_edit_img2img_passes": 0,
+            "fallback_to_img2img": True,
+        },
         "negative_prompt": "",
         "seed": 123,
     },
@@ -47,6 +63,27 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "local_mask_blur_sigma": 5.0,
         "color_match": True,
         "color_match_strength": 0.75,
+    },
+    "refiner": {
+        "enabled": False,
+        "model_id": "stabilityai/stable-diffusion-xl-refiner-1.0",
+        "torch_dtype": "auto",
+        "strength": 0.055,
+        "guidance_scale": 1.5,
+        "num_inference_steps": 12,
+        "prompt": None,
+        "negative_prompt": None,
+        "inversion_source_prompt": "a realistic portrait photo of the same person",
+        "inversion": {
+            "enabled": False,
+            "method": "ddim",
+            "num_steps": 20,
+            "strength": 0.15,
+            "inversion_guidance_scale": 1.0,
+            "negative_prompt_during_inversion": False,
+            "return_source_reconstruction": False,
+            "fallback_to_img2img": True,
+        },
     },
 }
 
@@ -148,6 +185,7 @@ def load_and_prepare_bundles(config: Dict[str, Any], device: torch.device, dtype
             checkpoint_path=Path(ckpt_path),
             strict_adapter=bool(ckpt_cfg.get("strict_adapter", True)),
         )
+        bundle["inference_checkpoint_id"] = str(Path(ckpt_path).resolve())
 
     return global_bundle, local_bundle
 
@@ -195,7 +233,7 @@ def main() -> None:
         seed=int(gen["seed"]),
     )
 
-    local_outputs = []
+    zones = []
     for idx, spec in enumerate(local_specs):
         bbox = tuple(spec["bbox"])
         crop_path = spec.get("crop_path")
@@ -204,33 +242,63 @@ def main() -> None:
         else:
             crop_img = image.crop(bbox)
         crop_tensor = pil_to_minus1_1(crop_img)
-        aged_crop = smoke_forward_models.img2img_single_bundle(
-            bundle=local_bundle,
-            image_tensor=crop_tensor,
-            prompt=spec["prompt"],
-            negative_prompt=spec.get("negative_prompt", gen.get("negative_prompt", "")),
-            strength=float(spec.get("strength", gen["local_strength"])),
-            guidance_scale=float(spec.get("guidance_scale", gen["local_guidance_scale"])),
-            num_inference_steps=int(spec.get("num_inference_steps", gen["local_num_inference_steps"])),
-            seed=int(spec.get("seed", gen["seed"] + idx + 1)),
-        )
         mask = None
         if spec.get("mask_path"):
             mask = Image.open(spec["mask_path"]).convert("L")
 
-        local_outputs.append({
+        zone = {
             "zone_name": spec.get("zone_name", f"zone_{idx}"),
-            "aged_crop": ((aged_crop.detach().cpu() + 1.0) / 2.0).clamp(0, 1),
+            "crop": crop_tensor,
             "bbox": bbox,
             "mask": mask,
             "prompt": spec["prompt"],
-        })
+            "negative_prompt": spec.get("negative_prompt", gen.get("negative_prompt", "")),
+            "strength": float(spec.get("strength", gen["local_strength"])),
+            "guidance_scale": float(spec.get("guidance_scale", gen["local_guidance_scale"])),
+            "num_inference_steps": int(
+                spec.get("num_inference_steps", gen["local_num_inference_steps"])
+            ),
+            "seed": int(spec.get("seed", gen["seed"] + idx + 1)),
+        }
+        for key in (
+            "source_prompt",
+            "zone_prompt",
+            "source_score",
+            "target_score",
+            "inversion_cache_key",
+        ):
+            if key in spec:
+                zone[key] = spec[key]
+        zones.append(zone)
+
+    from src.training.training_sampling_helpers import default_sample_local_forward
+
+    local_generator = torch.Generator(device=device)
+    local_generator.manual_seed(int(gen["seed"]))
+    local_outputs = default_sample_local_forward(
+        mixed_local_bundle=local_bundle,
+        zones=zones,
+        device=device,
+        strength=float(gen["local_strength"]),
+        guidance_scale=float(gen["local_guidance_scale"]),
+        num_inference_steps=int(gen["local_num_inference_steps"]),
+        negative_prompt=gen.get("negative_prompt", ""),
+        generation_method=gen.get("local_generation_method", "img2img"),
+        inversion_config=gen.get("local_inversion"),
+        generator=local_generator,
+    )
+
+    fusion_bundle = None
+    if bool(config.get("refiner", {}).get("enabled", False)):
+        from src.inference.inference_wrapper import _build_refiner_from_config
+
+        fusion_bundle = _build_refiner_from_config(config=config, device=device, verbose=True)
 
     fusion_out = fuse_global_local_outputs(
         x_orig=image,
         x_global=((x_global.detach().cpu() + 1.0) / 2.0).clamp(0, 1),
         local_outputs=local_outputs,
-        fusion_bundle=None,
+        fusion_bundle=fusion_bundle,
         device=device,
         seed=int(gen["seed"]),
         return_pil=True,

@@ -1,0 +1,19 @@
+_base_: default_inference.yaml
+
+# Experimental local inference baseline. Training and adapter weights are unchanged.
+generation:
+  local_generation_method: ddim_inversion
+  local_inversion:
+    enabled: true
+    method: ddim
+    num_steps: 40
+    strength: 0.45
+    inversion_guidance_scale: 1.0
+    edit_guidance_scale:
+    source_score_mode: auto
+    source_prompt_fallback: zone
+    negative_prompt_during_inversion: false
+    return_source_reconstruction: true
+    cache_enabled: true
+    post_edit_img2img_passes: 0
+    fallback_to_img2img: true

@@ -4,6 +4,9 @@
       "zone_name": "forehead",
       "bbox": [120, 80, 300, 220],
       "prompt": "a tightly cropped, centered close-up of the forehead region, showing facial skin texture and local aging details, with an aging score of 85%, for a person",
+      "source_score": 35,
+      "source_prompt": "a tightly cropped, centered close-up of the forehead region, showing facial skin texture and local aging details, with an aging score of 35%, for a person",
+      "zone_prompt": "a tightly cropped, centered close-up of the forehead region, showing facial skin texture",
       "crop_path": null,
       "mask_path": null
     }

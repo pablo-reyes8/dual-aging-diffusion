@@ -32,10 +32,21 @@ def test_inference_config_and_example_local_spec_are_complete():
 
     assert config["checkpoints"]["strict_adapter"] is True
     assert config["generation"]["global_num_inference_steps"] > 0
+    assert config["generation"]["local_generation_method"] == "img2img"
+    assert config["generation"]["local_inversion"]["enabled"] is False
     assert config["fusion"]["color_match"] is True
+    assert config["refiner"]["inversion"]["enabled"] is False
     assert specs
     assert all(len(item["bbox"]) == 4 for item in specs)
     assert all(item["prompt"] for item in specs)
+
+    inversion = deep_update(
+        INFERENCE_DEFAULTS,
+        load_config(REPO_ROOT / "configs/inference/ddim_inversion.yaml"),
+    )
+    assert inversion["generation"]["local_generation_method"] == "ddim_inversion"
+    assert inversion["generation"]["local_inversion"]["enabled"] is True
+    assert inversion["refiner"]["inversion"]["enabled"] is False
 
 
 def test_training_cli_dry_run_does_not_load_models():
@@ -97,6 +108,32 @@ def test_inference_cli_dry_run_validates_args_without_checkpoint_files():
             "a portrait photo of an elderly person",
             "--local-spec",
             "configs/inference/local_spec.example.json",
+            "--dry-run",
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Models were not loaded" in result.stdout
+
+
+def test_ddim_ablation_cli_dry_run_does_not_load_models():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "scripts.ablate_ddim_inversion",
+            "--config",
+            "configs/inference/ddim_inversion.yaml",
+            "--image",
+            "missing_input.png",
+            "--local-spec",
+            "configs/inference/local_spec.example.json",
+            "--local-checkpoint",
+            "missing_local.pt",
             "--dry-run",
         ],
         cwd=REPO_ROOT,

@@ -79,7 +79,7 @@ input face image
 | Local loss | LDLA-style full/zone/score/cycle components with ScoreNet support |
 | Global loss | Diffusion, age, delta-age, identity, and optional perceptual components |
 | Training | Global-local wrapper with branch scheduling, gradient accumulation, checkpointing, memory offload |
-| Inference | Adapter checkpoint restore, global/local img2img, deterministic fusion |
+| Inference | Adapter restore, local img2img/DDIM inversion, deterministic fusion, optional refiner |
 | CLIs | Data audit, high-level training orchestration, high-level inference orchestration |
 | Tests | CPU-safe smoke and contract tests; no diffusion downloads or full training in tests |
 
@@ -261,6 +261,23 @@ python -m scripts.inference_cli \
 ```
 
 The deterministic fusion path writes intermediate images and the final fused output.
+
+For the experimental local DDIM-inversion baseline, use
+[`configs/inference/ddim_inversion.yaml`](configs/inference/ddim_inversion.yaml).
+It changes inference only; training losses and existing DoRA checkpoints remain
+unchanged. The GPU ablation CLI compares both paths with the same inputs:
+
+```bash
+python -m scripts.ablate_ddim_inversion \
+  --config configs/inference/ddim_inversion.yaml \
+  --image path/to/person.png \
+  --local-spec path/to/local_crops.json \
+  --local-checkpoint path/to/local_best_inference.pt \
+  --strengths 0.25,0.35,0.45,0.55 \
+  --output-dir outputs/ddim_ablation
+```
+
+See [DDIM inversion and ablation details](docs/inference.md#gpu-ablation-after-training).
 
 ## Testing and CI
 

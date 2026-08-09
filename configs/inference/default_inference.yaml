@@ -29,6 +29,22 @@ generation:
   local_strength: 0.20
   local_guidance_scale: 0.8
   local_num_inference_steps: 40
+  # Historical default. Select "ddim_inversion" in an experiment config.
+  local_generation_method: img2img
+  local_inversion:
+    enabled: false
+    method: ddim
+    num_steps: 40
+    strength: 0.45
+    inversion_guidance_scale: 1.0
+    edit_guidance_scale:
+    source_score_mode: auto
+    source_prompt_fallback: zone
+    negative_prompt_during_inversion: false
+    return_source_reconstruction: false
+    cache_enabled: true
+    post_edit_img2img_passes: 0
+    fallback_to_img2img: true
   negative_prompt: ""
   seed: 123
 
@@ -41,3 +57,23 @@ fusion:
   local_mask_blur_sigma: 5.0
   color_match: true
   color_match_strength: 0.75
+
+refiner:
+  enabled: false
+  model_id: stabilityai/stable-diffusion-xl-refiner-1.0
+  torch_dtype: auto
+  strength: 0.055
+  guidance_scale: 1.5
+  num_inference_steps: 12
+  prompt:
+  negative_prompt:
+  inversion_source_prompt: a realistic portrait photo of the same person
+  inversion:
+    enabled: false
+    method: ddim
+    num_steps: 20
+    strength: 0.15
+    inversion_guidance_scale: 1.0
+    negative_prompt_during_inversion: false
+    return_source_reconstruction: false
+    fallback_to_img2img: true

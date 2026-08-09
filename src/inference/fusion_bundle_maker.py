@@ -83,6 +83,8 @@ def build_fusion_bundle(
     enable_vae_slicing: bool = True,
     enable_model_cpu_offload: bool = False,
     suppress_hf_progress_bars: bool = True,
+    inversion_config: Optional[Dict[str, Any]] = None,
+    inversion_source_prompt: Optional[str] = None,
 
     verbose: bool = True,
 ) -> Dict[str, Any]:
@@ -118,6 +120,23 @@ def build_fusion_bundle(
             "erased wrinkles, over-smoothed skin, unrealistic texture"
         )
 
+    from src.inference.diffusion_inversion import InversionConfig
+
+    refiner_inversion_defaults = {
+        "enabled": False,
+        "method": "ddim",
+        "num_steps": 20,
+        "strength": 0.15,
+        "inversion_guidance_scale": 1.0,
+        "edit_guidance_scale": None,
+        "negative_prompt_during_inversion": False,
+        "return_source_reconstruction": False,
+        "cache_enabled": False,
+        "fallback_to_img2img": True,
+    }
+    if inversion_config:
+        refiner_inversion_defaults.update(inversion_config)
+
     cfg = FusionModelConfig(
         model_id=model_id,
         device=str(device),
@@ -130,6 +149,12 @@ def build_fusion_bundle(
         enable_attention_slicing=bool(enable_attention_slicing),
         enable_vae_slicing=bool(enable_vae_slicing),
         enable_model_cpu_offload=bool(enable_model_cpu_offload),
+        inversion=InversionConfig.from_mapping(refiner_inversion_defaults),
+        inversion_source_prompt=(
+            str(inversion_source_prompt)
+            if inversion_source_prompt is not None
+            else "a realistic portrait photo of the same person"
+        ),
     )
 
     try:
@@ -183,6 +208,7 @@ def build_fusion_bundle(
             f"model={cfg.model_id} | device={cfg.device} | dtype={cfg.torch_dtype} | "
             f"strength={cfg.strength} | guidance={cfg.guidance_scale} | "
             f"steps={cfg.num_inference_steps}"
+            f" | inversion={cfg.inversion.enabled}"
         )
 
     return fusion_bundle

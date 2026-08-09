@@ -167,6 +167,18 @@ def parse_sampling_local_batch(batch: Dict[str, Any]) -> List[Dict[str, Any]]:
     bboxes = _get_first_existing(batch, ["bbox", "bboxes", "bbox_xyxy"])
     masks = _get_first_existing(batch, ["mask", "masks", "local_mask"], default=None)
     names = _get_first_existing(batch, ["zone_name", "zone_names", "region"], default=None)
+    source_prompts = _get_first_existing(batch, ["source_prompt", "source_prompts"], default=None)
+    zone_prompts = _get_first_existing(batch, ["zone_prompt", "zone_prompts"], default=None)
+    source_scores = _get_first_existing(
+        batch,
+        ["source_score", "source_scores", "score_raw", "score_norm", "score"],
+        default=None,
+    )
+    target_scores = _get_first_existing(
+        batch,
+        ["target_score", "target_scores", "target_score_raw"],
+        default=None,
+    )
 
     if crops is None:
         raise KeyError("Local sampling batch must contain 'zones' or crop/image/pixel_values.")
@@ -204,16 +216,37 @@ def parse_sampling_local_batch(batch: Dict[str, Any]) -> List[Dict[str, Any]]:
     else:
         name_list = list(names) if isinstance(names, (list, tuple)) else [names]
 
+    def _as_optional_list(value):
+        if value is None:
+            return [None] * len(crop_list)
+        if torch.is_tensor(value):
+            return value.detach().cpu().view(-1).tolist()
+        return list(value) if isinstance(value, (list, tuple)) else [value]
+
+    source_prompt_list = _as_optional_list(source_prompts)
+    zone_prompt_list = _as_optional_list(zone_prompts)
+    source_score_list = _as_optional_list(source_scores)
+    target_score_list = _as_optional_list(target_scores)
+
     zones = []
 
     for i in range(len(crop_list)):
-        zones.append({
+        zone = {
             "zone_name": str(name_list[i]) if i < len(name_list) else f"zone_{i}",
             "crop": crop_list[i],
             "prompt": str(prompt_list[i]) if i < len(prompt_list) else str(prompt_list[-1]),
             "bbox": bbox_list[i] if i < len(bbox_list) else bbox_list[-1],
             "mask": mask_list[i] if i < len(mask_list) else None,
-        })
+        }
+        for key, values in (
+            ("source_prompt", source_prompt_list),
+            ("zone_prompt", zone_prompt_list),
+            ("source_score", source_score_list),
+            ("target_score", target_score_list),
+        ):
+            if i < len(values) and values[i] is not None:
+                zone[key] = values[i]
+        zones.append(zone)
 
     return zones
 
@@ -502,6 +535,8 @@ def default_sample_local_forward(
     recycle_guidance_scale: Optional[float] = None,
     recycle_num_inference_steps: Optional[int] = None,
     generator: Optional[torch.Generator] = None,
+    generation_method: str = "img2img",
+    inversion_config: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Default local crop sampling forward.
@@ -516,6 +551,36 @@ def default_sample_local_forward(
             }
         ]
     """
+    generation_method = str(generation_method).lower().strip()
+    if generation_method not in {"img2img", "ddim_inversion"}:
+        raise ValueError(
+            f"Unsupported local generation_method={generation_method!r}. "
+            "Use 'img2img' or 'ddim_inversion'."
+        )
+
+    inversion_editor = None
+    inversion_init_error = None
+    resolved_inversion_config = None
+    score_net = mixed_local_bundle.get("score_net")
+    if generation_method == "ddim_inversion":
+        from src.inference.diffusion_inversion import DDIMInversionEditor, InversionConfig
+
+        resolved_inversion_config = InversionConfig.from_mapping(inversion_config)
+        if not resolved_inversion_config.enabled:
+            raise ValueError(
+                "generation_method='ddim_inversion' requires inversion.enabled=true."
+            )
+        try:
+            inversion_editor = DDIMInversionEditor.from_bundle(
+                mixed_local_bundle,
+                device=device,
+                config=resolved_inversion_config,
+            )
+        except Exception as exc:
+            if not resolved_inversion_config.fallback_to_img2img:
+                raise
+            inversion_init_error = exc
+
     pipe = None
     for key in ["pipe", "pipeline", "img2img_pipeline"]:
         if key in mixed_local_bundle and mixed_local_bundle[key] is not None:
@@ -531,9 +596,86 @@ def default_sample_local_forward(
     local_outputs = []
     recycle_passes = max(1, int(recycle_passes))
 
+    def _score_raw(value) -> Optional[float]:
+        if value is None:
+            return None
+        if torch.is_tensor(value):
+            value = value.detach().float().view(-1)[0].item()
+        value = float(value)
+        return 100.0 * value if 0.0 <= value <= 1.0 else value
+
+    def _build_source_condition(zone, crop, target_prompt):
+        import re
+
+        from src.inference.diffusion_inversion import evaluate_score_net
+        from src.inference.image_tensor_utils import image_to_tensor01
+        from src.training.target_prompt_building import (
+            build_local_target_prompt_from_base,
+            extract_score_from_local_prompt,
+            remove_score_from_local_prompt,
+        )
+
+        score_mode = str(resolved_inversion_config.source_score_mode).lower().strip()
+        if score_mode not in {"auto", "metadata", "scorenet", "zone"}:
+            raise ValueError(
+                "inversion.source_score_mode must be one of: auto, metadata, scorenet, zone."
+            )
+
+        explicit_source_prompt = zone.get("source_prompt")
+        source_base = re.sub(
+            r",?\s*with\s+(?:an?\s+)?(?:[a-z-]+\s+)*?(?:local\s+)?aging\s+score\s+of\s+\d{1,3}\s*%",
+            "",
+            str(target_prompt),
+            flags=re.IGNORECASE,
+        )
+        metadata_score = _score_raw(
+            zone.get("source_score", zone.get("score_raw", zone.get("score_norm", zone.get("score"))))
+        )
+        source_score = metadata_score if score_mode in {"auto", "metadata"} else None
+        origin = "metadata" if source_score is not None else None
+
+        if source_score is None and score_net is not None and score_mode in {"auto", "scorenet"}:
+            crop_m11 = image_to_tensor01(crop, device=device, dtype=torch.float32) * 2.0 - 1.0
+            score = evaluate_score_net(score_net, crop_m11)
+            if score is not None:
+                source_score = score * 100.0
+                origin = "scorenet"
+
+        if explicit_source_prompt is not None:
+            source_prompt = str(explicit_source_prompt)
+            if source_score is None:
+                source_score = _score_raw(extract_score_from_local_prompt(source_prompt))
+            origin = "metadata"
+        elif source_score is not None:
+            # Target prompts produced by training can contain adjectives such as
+            # "pronounced local aging score". Remove the entire score descriptor
+            # before using the existing prompt builder for the observed score.
+            source_prompt = build_local_target_prompt_from_base(
+                source_base, int(round(source_score)), "source"
+            )
+        else:
+            if resolved_inversion_config.source_prompt_fallback != "zone":
+                raise ValueError(
+                    "Only inversion.source_prompt_fallback='zone' is supported in this baseline."
+                )
+            source_prompt = str(
+                zone.get("zone_prompt")
+                or remove_score_from_local_prompt(source_base)
+            )
+            origin = "zone_fallback"
+
+        target_score = _score_raw(zone.get("target_score"))
+        if target_score is None:
+            target_score = _score_raw(extract_score_from_local_prompt(str(target_prompt)))
+        return source_prompt, source_score, target_score, origin
+
     for zone in zones:
         crop = zone["crop"]
         prompt = zone["prompt"]
+        zone_generator = generator
+        if zone.get("seed") is not None:
+            zone_generator = torch.Generator(device=device)
+            zone_generator.manual_seed(int(zone["seed"]))
         zone_negative_prompt = zone.get("negative_prompt", negative_prompt)
         zone_strength = float(zone.get("strength", strength))
         zone_guidance_scale = float(zone.get("guidance_scale", guidance_scale))
@@ -558,7 +700,100 @@ def default_sample_local_forward(
             )
         )
 
-        if pipe is None:
+        inversion_result = None
+        if generation_method == "ddim_inversion":
+            source_prompt, source_score, target_score, score_origin = _build_source_condition(
+                zone, crop, prompt
+            )
+            inversion_negative_prompt = (
+                zone_negative_prompt
+                if resolved_inversion_config.negative_prompt_during_inversion
+                else None
+            )
+            try:
+                if inversion_editor is None:
+                    raise RuntimeError(
+                        f"DDIM inversion editor could not be initialized: {inversion_init_error}"
+                    )
+                inversion_result = inversion_editor.edit(
+                    crop,
+                    source_prompt=source_prompt,
+                    target_prompt=prompt,
+                    negative_prompt=zone_negative_prompt,
+                    source_negative_prompt=inversion_negative_prompt,
+                    edit_guidance_scale=zone.get("edit_guidance_scale", zone_guidance_scale),
+                    cache_key=zone.get("inversion_cache_key"),
+                    diagnostics={
+                        "region": zone.get("zone_name"),
+                        "source_score": source_score,
+                        "target_score": target_score,
+                        "source_score_origin": score_origin,
+                    },
+                )
+                aged_crop = inversion_result.image
+                if score_net is not None:
+                    from src.inference.diffusion_inversion import evaluate_score_net
+
+                    edited_score_norm = evaluate_score_net(score_net, aged_crop)
+                    source_score_norm = evaluate_score_net(
+                        score_net,
+                        _image_to_minus1_1_tensor(
+                            crop,
+                            device=device,
+                            dtype=torch.float32,
+                        ),
+                    )
+                    inversion_result.diagnostics.update(
+                        {
+                            "scorenet_source_score": None
+                            if source_score_norm is None
+                            else 100.0 * source_score_norm,
+                            "scorenet_edited_score": None
+                            if edited_score_norm is None
+                            else 100.0 * edited_score_norm,
+                            "target_score_error": None
+                            if edited_score_norm is None or target_score is None
+                            else abs(100.0 * edited_score_norm - target_score),
+                        }
+                    )
+            except Exception as exc:
+                if not resolved_inversion_config.fallback_to_img2img:
+                    raise
+                import warnings
+
+                warnings.warn(
+                    f"DDIM inversion failed for zone={zone.get('zone_name')!r}; "
+                    f"falling back to img2img: {exc}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                generation_fallback = True
+                if pipe is None:
+                    aged_crop = _img2img_tensor_bundle_safe(
+                        bundle=mixed_local_bundle,
+                        image=crop,
+                        prompt=prompt,
+                        negative_prompt=zone_negative_prompt,
+                        device=device,
+                        strength=zone_strength,
+                        guidance_scale=zone_guidance_scale,
+                        num_inference_steps=zone_num_inference_steps,
+                        generator=zone_generator,
+                    )
+                else:
+                    aged_crop = _call_img2img_pipe_safe(
+                        pipe=pipe,
+                        image=crop,
+                        prompt=prompt,
+                        negative_prompt=zone_negative_prompt,
+                        strength=zone_strength,
+                        guidance_scale=zone_guidance_scale,
+                        num_inference_steps=zone_num_inference_steps,
+                        generator=zone_generator,
+                    )
+            else:
+                generation_fallback = False
+        elif pipe is None:
             aged_crop = _img2img_tensor_bundle_safe(
                 bundle=mixed_local_bundle,
                 image=crop,
@@ -568,7 +803,7 @@ def default_sample_local_forward(
                 strength=zone_strength,
                 guidance_scale=zone_guidance_scale,
                 num_inference_steps=zone_num_inference_steps,
-                generator=generator,
+                generator=zone_generator,
             )
         else:
             aged_crop = _call_img2img_pipe_safe(
@@ -579,10 +814,15 @@ def default_sample_local_forward(
                 strength=zone_strength,
                 guidance_scale=zone_guidance_scale,
                 num_inference_steps=zone_num_inference_steps,
-                generator=generator,
+                generator=zone_generator,
             )
 
-        for _ in range(recycle_passes - 1):
+        if generation_method == "ddim_inversion":
+            post_passes = int(resolved_inversion_config.post_edit_img2img_passes)
+        else:
+            post_passes = recycle_passes - 1
+
+        for _ in range(post_passes):
             if pipe is None:
                 aged_crop = _img2img_tensor_bundle_safe(
                     bundle=mixed_local_bundle,
@@ -593,7 +833,7 @@ def default_sample_local_forward(
                     strength=recycle_zone_strength,
                     guidance_scale=recycle_zone_guidance_scale,
                     num_inference_steps=recycle_zone_num_inference_steps,
-                    generator=generator,
+                    generator=zone_generator,
                 )
             else:
                 aged_crop = _call_img2img_pipe_safe(
@@ -604,17 +844,25 @@ def default_sample_local_forward(
                     strength=recycle_zone_strength,
                     guidance_scale=recycle_zone_guidance_scale,
                     num_inference_steps=recycle_zone_num_inference_steps,
-                    generator=generator,
+                    generator=zone_generator,
                 )
 
-        local_outputs.append({
+        output = {
             "zone_name": zone.get("zone_name", None),
             "box_index": zone.get("box_index", None),
             "aged_crop": aged_crop,
             "bbox": zone["bbox"],
             "mask": zone.get("mask", None),
             "prompt": prompt,
-        })
+        }
+        if inversion_result is not None:
+            output["inversion_diagnostics"] = inversion_result.diagnostics
+            if inversion_result.reconstruction is not None:
+                output["source_reconstruction"] = inversion_result.reconstruction
+        if generation_method == "ddim_inversion":
+            output["generation_method"] = generation_method
+            output["inversion_fallback"] = generation_fallback
+        local_outputs.append(output)
 
     return local_outputs
 

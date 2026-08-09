@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Union
 
 import torch
+
+from src.inference.diffusion_inversion import InversionConfig
 
 @dataclass
 class FusionModelConfig:
@@ -32,6 +34,18 @@ class FusionModelConfig:
     enable_attention_slicing: bool = True
     enable_vae_slicing: bool = True
     enable_model_cpu_offload: bool = False
+
+    # Independent, experimental anchor for the already-fused image. OFF by default.
+    inversion: InversionConfig = field(
+        default_factory=lambda: InversionConfig(
+            enabled=False,
+            num_steps=20,
+            strength=0.15,
+            inversion_guidance_scale=1.0,
+            fallback_to_img2img=True,
+        )
+    )
+    inversion_source_prompt: str = "a realistic portrait photo of the same person"
 
 
 def _resolve_fusion_device(device: Union[str, torch.device] = "auto") -> torch.device:

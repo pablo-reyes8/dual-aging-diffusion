@@ -213,6 +213,9 @@ def fuse_global_local_outputs(
         "fusion_model_config": None
             if fusion_bundle is None
             else asdict(fusion_bundle["config"]),
+        "refiner_inversion_diagnostics": None
+            if fusion_bundle is None
+            else fusion_bundle.get("last_inversion_diagnostics"),
     }
 
     if return_pil:

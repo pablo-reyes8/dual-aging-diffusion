@@ -37,6 +37,22 @@ DEFAULT_INFERENCE_WRAPPER_CONFIG: Dict[str, Any] = {
         "local_guidance_scale": 0.8,
         "local_num_inference_steps": 40,
         "local_negative_prompt": None,
+        "local_generation_method": "img2img",
+        "local_inversion": {
+            "enabled": False,
+            "method": "ddim",
+            "num_steps": 40,
+            "strength": 0.45,
+            "inversion_guidance_scale": 1.0,
+            "edit_guidance_scale": None,
+            "source_score_mode": "auto",
+            "source_prompt_fallback": "zone",
+            "negative_prompt_during_inversion": False,
+            "return_source_reconstruction": False,
+            "cache_enabled": True,
+            "post_edit_img2img_passes": 0,
+            "fallback_to_img2img": True,
+        },
         "local_recycle_passes": 1,
         "local_recycle_strength": None,
         "local_recycle_guidance_scale": None,
@@ -75,6 +91,17 @@ DEFAULT_INFERENCE_WRAPPER_CONFIG: Dict[str, Any] = {
         "enable_model_cpu_offload": False,
         "suppress_hf_progress_bars": True,
         "offload_after": True,
+        "inversion_source_prompt": "a realistic portrait photo of the same person",
+        "inversion": {
+            "enabled": False,
+            "method": "ddim",
+            "num_steps": 20,
+            "strength": 0.15,
+            "inversion_guidance_scale": 1.0,
+            "negative_prompt_during_inversion": False,
+            "return_source_reconstruction": False,
+            "fallback_to_img2img": True,
+        },
     },
     "runtime": {
         "offload_after_each_stage": True,
@@ -178,11 +205,13 @@ def _ensure_adapter_injected_from_checkpoint(
             verbose=verbose,
         )
 
-    return restore_inference_checkpoint_into_bundle(
+    report = restore_inference_checkpoint_into_bundle(
         bundle=bundle,
         checkpoint_path=checkpoint_path,
         strict_adapter=strict_adapter,
     )
+    bundle["inference_checkpoint_id"] = str(checkpoint_path.resolve())
+    return report
 
 
 def _build_refiner_from_config(
@@ -208,6 +237,8 @@ def _build_refiner_from_config(
         enable_vae_slicing=bool(refiner_cfg.get("enable_vae_slicing", True)),
         enable_model_cpu_offload=bool(refiner_cfg.get("enable_model_cpu_offload", False)),
         suppress_hf_progress_bars=bool(refiner_cfg.get("suppress_hf_progress_bars", True)),
+        inversion_config=refiner_cfg.get("inversion"),
+        inversion_source_prompt=refiner_cfg.get("inversion_source_prompt"),
         verbose=verbose,
     )
 
@@ -389,6 +420,8 @@ def run_sampling_objects_inference(
                 "recycle_guidance_scale": gen_cfg.get("local_recycle_guidance_scale"),
                 "recycle_num_inference_steps": gen_cfg.get("local_recycle_num_inference_steps"),
                 "generator": generator,
+                "generation_method": gen_cfg.get("local_generation_method", "img2img"),
+                "inversion_config": gen_cfg.get("local_inversion"),
             },
         )
 

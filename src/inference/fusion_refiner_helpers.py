@@ -54,6 +54,59 @@ def apply_fusion_refiner_if_available(
     guidance_scale = float(guidance_scale if guidance_scale is not None else cfg.guidance_scale)
     num_inference_steps = int(num_inference_steps if num_inference_steps is not None else cfg.num_inference_steps)
 
+    image_pil = tensor01_to_pil(x_blend)
+
+    inversion_cfg = getattr(cfg, "inversion", None)
+    if isinstance(inversion_cfg, dict):
+        from src.inference.diffusion_inversion import InversionConfig
+
+        inversion_cfg = InversionConfig.from_mapping(inversion_cfg)
+    inversion_enabled = bool(
+        getattr(inversion_cfg, "enabled", False)
+        if inversion_cfg is not None
+        else False
+    )
+
+    if inversion_enabled:
+        from src.inference.diffusion_inversion import edit_sdxl_refiner_with_ddim_inversion
+
+        try:
+            inversion_result = edit_sdxl_refiner_with_ddim_inversion(
+                pipe=pipe,
+                image=x_blend,
+                source_prompt=getattr(
+                    cfg,
+                    "inversion_source_prompt",
+                    "a realistic portrait photo of the same person",
+                ),
+                target_prompt=prompt,
+                negative_prompt=negative_prompt or "",
+                device=device,
+                config=inversion_cfg,
+                edit_guidance_scale=guidance_scale,
+            )
+            fusion_bundle["last_inversion_diagnostics"] = inversion_result.diagnostics
+            fusion_bundle["last_source_reconstruction"] = inversion_result.reconstruction
+            x_final = inversion_result.image.to(device=x_blend.device, dtype=x_blend.dtype)
+            if x_final.shape[-2:] != x_blend.shape[-2:]:
+                x_final = resize_tensor_image(x_final, size_hw=x_blend.shape[-2:])
+            return x_final.clamp(0, 1)
+        except Exception as exc:
+            fallback = bool(getattr(inversion_cfg, "fallback_to_img2img", True))
+            if not fallback:
+                raise
+            import warnings
+
+            warnings.warn(
+                f"SDXL refiner inversion failed; falling back to historical img2img: {exc}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            fusion_bundle["last_inversion_diagnostics"] = {
+                "status": "fallback_to_img2img",
+                "error": str(exc),
+            }
+
     min_effective_strength = (1.0 / max(1, num_inference_steps)) + 1e-3
     if 0.0 < strength < min_effective_strength:
         print(
@@ -62,8 +115,6 @@ def apply_fusion_refiner_if_available(
             "to avoid an empty SDXL img2img timestep schedule."
         )
         strength = min_effective_strength
-
-    image_pil = tensor01_to_pil(x_blend)
 
     with torch.inference_mode():
         out = pipe(
