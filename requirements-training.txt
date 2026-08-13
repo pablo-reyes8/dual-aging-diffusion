@@ -1,5 +1,5 @@
 # CUDA image extras. PyTorch and torchvision come from the CUDA base image.
 -r requirements-dev.txt
-jupyterlab>=4.0
+jupyterlab>=4.6.2
 ipykernel>=6.0
 nbconvert>=7.17.1
